@@ -10,8 +10,8 @@ const SignIn = () => {
   }
 
   return (
-    <SafeAreaView>
-      <Text>Boba Scheduler</Text>
+    <SafeAreaView style={styles.container}>
+      <Text>Welcome to BobaSync!</Text>
     </SafeAreaView>
   )
 }

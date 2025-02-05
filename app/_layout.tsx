@@ -7,6 +7,8 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import SignIn from './sign-in';
 
+import "./global.css"
+
 // import { useColorScheme } from '@/hooks/useColorScheme';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -30,13 +32,14 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={DefaultTheme}>
-      {/* <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" /> */}
-      <SignIn />
-    </ThemeProvider>
+    <SignIn />
+    // <ThemeProvider value={DefaultTheme}>
+    //   {/* <Stack>
+    //     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    //     <Stack.Screen name="+not-found" />
+    //   </Stack>
+    //   <StatusBar style="auto" /> */}
+    //   <SignIn />
+    // </ThemeProvider>
   );
 }
