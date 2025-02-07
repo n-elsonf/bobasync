@@ -13,16 +13,16 @@ export class AuthController {
     }
   }
 
-  // Login user
-  static async login(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { email, password } = req.body;
-      const result = await AuthService.login(email, password);
-      res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  }
+  //   // Login user
+  //   static async login(req: Request, res: Response, next: NextFunction) {
+  //     try {
+  //       const { email, password } = req.body;
+  //       const result = await AuthService.login(email, password);
+  //       res.status(200).json(result);
+  //     } catch (error) {
+  //       next(error);
+  //     }
+  //   }
 
   // Google authentication
   //   static async googleAuth(req: Request, res: Response, next: NextFunction) {

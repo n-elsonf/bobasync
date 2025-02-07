@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import { Document, Model } from "mongoose";
 
 // export interface IUser {
 //   name: string;
@@ -17,25 +17,20 @@ import mongoose from "mongoose";
 // }
 
 // Interface to define the User document structure
-export interface IUser extends Document {
+export interface IUser {
+  name: string;
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
-  isActive: boolean;
   role: "user" | "admin";
+  googleId?: string;
+  profilePicture?: string;
+  isEmailVerified: boolean;
+  verificationToken?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
   lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
-  profilePicture?: string;
-  phoneNumber?: string;
-  address?: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
 }
 
 // export interface IUserMethods {
@@ -43,4 +38,13 @@ export interface IUser extends Document {
 //   getPublicProfile(): Partial<IUser>;
 // }
 
-export type UserModel = mongoose.Model<IUser>;
+export interface IUserMethods {
+  comparePassword(candidatePassword: string): Promise<boolean>;
+  getPublicProfile(): Partial<IUser>;
+}
+
+export interface IUserModel extends Model<IUser, {}, IUserMethods> {
+  findByEmail(
+    email: string
+  ): Promise<Document<unknown, any, IUser> & IUser & IUserMethods>;
+}

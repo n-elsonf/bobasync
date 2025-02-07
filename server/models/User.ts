@@ -1,8 +1,15 @@
-// models/User.js
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
 
-const userSchema = new mongoose.Schema(
+
+
+
+
+
+// src/models/User.ts
+import mongoose, { Schema } from "mongoose";
+import bcrypt from "bcryptjs";
+import { IUser, IUserMethods, IUserModel } from "./types/user.types";
+
+const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   {
     name: {
       type: String,
@@ -17,16 +24,26 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
-      match: [
-        /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/,
-        "Please provide a valid email address",
-      ],
+      validate: {
+        validator: function (v: string) {
+          return /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test(v);
+        },
+        message: (props: any) => `${props.value} is not a valid email address!`,
+      },
     },
     password: {
       type: String,
       required: [true, "Please provide a password"],
       minlength: [8, "Password must be at least 8 characters long"],
       select: false, // Don't include password in queries by default
+    },
+    role: {
+      type: String,
+      enum: {
+        values: ["user", "admin"],
+        message: "{VALUE} is not a valid role",
+      },
+      default: "user",
     },
     googleId: {
       type: String,
@@ -36,11 +53,6 @@ const userSchema = new mongoose.Schema(
     profilePicture: {
       type: String,
       default: "default-avatar.png",
-    },
-    role: {
-      type: String,
-      enum: ["user", "admin"],
-      default: "user",
     },
     isEmailVerified: {
       type: Boolean,
@@ -53,57 +65,101 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   {
     timestamps: true, // Automatically manage createdAt and updatedAt
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-// Hash password before saving
+// Indexes
+userSchema.index({ email: 1 });
+userSchema.index({ googleId: 1 });
+
+// Pre-save middleware to hash password
 userSchema.pre("save", async function (next) {
-  // Only hash the password if it has been modified
+  // Only hash password if it has been modified
   if (!this.isModified("password")) return next();
 
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
-  } catch (error) {
+  } catch (error: any) {
     next(error);
   }
 });
 
-// Method to compare passwords
-userSchema.methods.comparePassword = async function (candidatePassword) {
+// Method to compare password
+userSchema.methods.comparePassword = async function (
+  this: IUser & Document,
+  candidatePassword: string
+): Promise<boolean> {
   try {
     return await bcrypt.compare(candidatePassword, this.password);
   } catch (error) {
-    throw new Error(error);
+    throw new Error("Error comparing passwords");
   }
 };
 
 // Method to get public profile (exclude sensitive data)
-userSchema.methods.getPublicProfile = function () {
+userSchema.methods.getPublicProfile = function (
+  this: IUser & Document
+): Partial<IUser> {
   const userObject = this.toObject();
-  delete userObject.password;
-  delete userObject.verificationToken;
-  delete userObject.resetPasswordToken;
-  delete userObject.resetPasswordExpire;
-  return userObject;
+  const {
+    password,
+    verificationToken,
+    resetPasswordToken,
+    resetPasswordExpire,
+    ...publicData
+  } = userObject;
+
+  return publicData;
 };
 
-// Create indexes
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
+// Static method to find user by email
+userSchema.static("findByEmail", async function findByEmail(email: string) {
+  return this.findOne({ email });
+});
 
-const User = mongoose.model("User", userSchema);
+// Virtual for full name
+userSchema.virtual("fullName").get(function (this: IUser) {
+  return `${this.name}`;
+});
 
-module.exports = User;
+// Create the model
+const User = mongoose.model<IUser, IUserModel>("User", userSchema);
+
+export default User;
+
+// Example usage:
+/*
+import User from './models/User';
+
+// Create new user
+const createUser = async () => {
+  try {
+    const user = await User.create({
+      name: 'John Doe',
+      email: 'john@example.com',
+      password: 'password123'
+    });
+    return user.getPublicProfile();
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Find user by email
+const findUser = async (email: string) => {
+  const user = await User.findByEmail(email);
+  return user?.getPublicProfile();
+};
+
+// Compare password
+const validatePassword = async (user: IUser & Document, password: string) => {
+  return await user.comparePassword(password);
+};
+*/
