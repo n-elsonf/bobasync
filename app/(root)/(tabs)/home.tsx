@@ -63,7 +63,9 @@ const Home = () => {
       <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 10 }}>Nearby Tea Shops 🍵</Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#00cc99" />
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <ActivityIndicator size="large" color="#00cc99" />
+        </View>
       ) : (
         <FlatList
           data={shops}
