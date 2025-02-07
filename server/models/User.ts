@@ -1,88 +1,109 @@
-import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
-import { IUser, UserModel } from "./types";
+// models/User.js
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
-// User Schema definition
-const userSchema = new mongoose.Schema<IUser>(
+const userSchema = new mongoose.Schema(
   {
+    name: {
+      type: String,
+      required: [true, "Please provide your name"],
+      trim: true,
+      minlength: [2, "Name must be at least 2 characters long"],
+      maxlength: [50, "Name cannot be more than 50 characters"],
+    },
     email: {
       type: String,
-      required: true,
+      required: [true, "Please provide your email"],
       unique: true,
       trim: true,
       lowercase: true,
       match: [
-        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-        "Please enter a valid email",
+        /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/,
+        "Please provide a valid email address",
       ],
     },
     password: {
       type: String,
-      required: true,
-      minlength: [8, "Password must bed at least 8 characters long"],
+      required: [true, "Please provide a password"],
+      minlength: [8, "Password must be at least 8 characters long"],
+      select: false, // Don't include password in queries by default
     },
-    firstName: {
+    googleId: {
       type: String,
-      required: true,
-      trim: true,
+      unique: true,
+      sparse: true, // Allows null/undefined values to be unique
     },
-    lastName: {
+    profilePicture: {
       type: String,
-      required: true,
-      trim: true,
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
+      default: "default-avatar.png",
     },
     role: {
       type: String,
       enum: ["user", "admin"],
       default: "user",
     },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: String,
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
     lastLogin: {
       type: Date,
+      default: null,
     },
-    profilePicture: {
-      type: String,
+    createdAt: {
+      type: Date,
+      default: Date.now,
     },
-    phoneNumber: {
-      type: String,
-      match: [
-        /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/,
-        "Please enter a valid phone number",
-      ],
-    },
-    address: {
-      street: String,
-      city: String,
-      state: String,
-      zipCode: String,
-      country: String,
+    updatedAt: {
+      type: Date,
+      default: Date.now,
     },
   },
   {
-    timestamps: true, // Automatically add createdAt and updatedAt fields
-    toJSON: {
-      transform: function (doc, ret) {
-        delete ret.password; // Remove password when converting to JSON
-        return ret;
-      },
-    },
+    timestamps: true, // Automatically manage createdAt and updatedAt
   }
 );
+
+// Hash password before saving
+userSchema.pre("save", async function (next) {
+  // Only hash the password if it has been modified
+  if (!this.isModified("password")) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Method to compare passwords
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+// Method to get public profile (exclude sensitive data)
+userSchema.methods.getPublicProfile = function () {
+  const userObject = this.toObject();
+  delete userObject.password;
+  delete userObject.verificationToken;
+  delete userObject.resetPasswordToken;
+  delete userObject.resetPasswordExpire;
+  return userObject;
+};
 
 // Create indexes
 userSchema.index({ email: 1 });
 userSchema.index({ googleId: 1 });
 
-// Add any pre-save middleware (e.g., for password hashing)
-userSchema.pre("save", async function (next) {
-  // Add your password hashing logic here if needed
-  next();
-});
+const User = mongoose.model("User", userSchema);
 
-// Create and export the model
-const User = mongoose.model<IUser>("User", userSchema);
-
-export default User;
+module.exports = User;
