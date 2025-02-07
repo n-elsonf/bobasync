@@ -14,96 +14,98 @@ dotenv.config();
 // Initialize express app
 const app = express();
 
+const mongodbUri = process.env.MONGODB_URI || "mongodb://localhost:27017/mern";
+
 // Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-  })
-);
+// app.use(express.urlencoded({ extended: true }));
+// app.use(
+//   cors({
+//     origin: process.env.CLIENT_URL,
+//     credentials: true,
+//   })
+// );
 
-// Session configuration
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "your-secret-key",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    },
-  })
-);
+// // Session configuration
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET || "your-secret-key",
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: {
+//       secure: process.env.NODE_ENV === "production",
+//       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+//     },
+//   })
+// );
 
-// Initialize passport
-app.use(passport.initialize());
-app.use(passport.session());
+// // Initialize passport
+// app.use(passport.initialize());
+// app.use(passport.session());
 
-// Passport serialization
-passport.serializeUser((user: any, done) => {
-  done(null, user.id);
-});
+// // Passport serialization
+// passport.serializeUser((user: any, done) => {
+//   done(null, user.id);
+// });
 
-passport.deserializeUser(async (id: string, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (error) {
-    done(error, null);
-  }
-});
+// passport.deserializeUser(async (id: string, done) => {
+//   try {
+//     const user = await User.findById(id);
+//     done(null, user);
+//   } catch (error) {
+//     done(error, null);
+//   }
+// });
 
-// Google OAuth Strategy
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: `${process.env.SERVER_URL}/auth/google/callback`,
-      scope: ["profile", "email"],
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        // Check if user exists
-        let user = await User.findOne({ googleId: profile.id });
+// // Google OAuth Strategy
+// passport.use(
+//   new GoogleStrategy(
+//     {
+//       clientID: process.env.GOOGLE_CLIENT_ID!,
+//       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+//       callbackURL: `${process.env.SERVER_URL}/auth/google/callback`,
+//       scope: ["profile", "email"],
+//     },
+//     async (accessToken, refreshToken, profile, done) => {
+//       try {
+//         // Check if user exists
+//         let user = await User.findOne({ googleId: profile.id });
 
-        if (!user) {
-          // Create new user if doesn't exist
-          user = await User.create({
-            googleId: profile.id,
-            email: profile.emails?.[0].value,
-            name: profile.displayName,
-            profilePicture: profile.photos?.[0].value,
-            isEmailVerified: true, // Google accounts are already verified
-          });
-        }
+//         if (!user) {
+//           // Create new user if doesn't exist
+//           user = await User.create({
+//             googleId: profile.id,
+//             email: profile.emails?.[0].value,
+//             name: profile.displayName,
+//             profilePicture: profile.photos?.[0].value,
+//             isEmailVerified: true, // Google accounts are already verified
+//           });
+//         }
 
-        return done(null, user);
-      } catch (error) {
-        return done(error as Error, undefined);
-      }
-    }
-  )
-);
+//         return done(null, user);
+//       } catch (error) {
+//         return done(error as Error, undefined);
+//       }
+//     }
+//   )
+// );
 
-// Auth routes
-app.get(
-  "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
+// // Auth routes
+// app.get(
+//   "/auth/google",
+//   passport.authenticate("google", { scope: ["profile", "email"] })
+// );
 
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: `${process.env.CLIENT_URL}/login`,
-    session: true,
-  }),
-  (req, res) => {
-    res.redirect(`${process.env.CLIENT_URL}/dashboard`);
-  }
-);
+// app.get(
+//   "/auth/google/callback",
+//   passport.authenticate("google", {
+//     failureRedirect: `${process.env.CLIENT_URL}/login`,
+//     session: true,
+//   }),
+//   (req, res) => {
+//     res.redirect(`${process.env.CLIENT_URL}/dashboard`);
+//   }
+// );
 
 // MongoDB Connection
 const connectDB = async () => {
@@ -124,22 +126,22 @@ const connectDB = async () => {
   }
 };
 
-// Error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message:
-      process.env.NODE_ENV === "development"
-        ? err.message
-        : "Internal server error",
-  });
-});
+// // Error handling middleware
+// app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+//   console.error(err.stack);
+//   res.status(500).json({
+//     success: false,
+//     message:
+//       process.env.NODE_ENV === "development"
+//         ? err.message
+//         : "Internal server error",
+//   });
+// });
 
-// Health check route
-app.get("/health", (req: Request, res: Response) => {
-  res.status(200).json({ status: "ok" });
-});
+// // Health check route
+// app.get("/health", (req: Request, res: Response) => {
+//   res.status(200).json({ status: "ok" });
+// });
 
 // Start server
 const PORT = process.env.PORT || 5000;
@@ -148,9 +150,7 @@ const startServer = async () => {
   try {
     await connectDB();
     app.listen(PORT, () => {
-      console.log(
-        `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
-      );
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
     console.error("Error starting server:", error);
@@ -160,5 +160,5 @@ const startServer = async () => {
 
 startServer();
 
-// For testing purposes
-export default app;
+// // For testing purposes
+// export default app;
