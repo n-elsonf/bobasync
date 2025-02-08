@@ -1,13 +1,7 @@
-
-
-
-
-
-
 // src/models/User.ts
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcryptjs";
-import { IUser, IUserMethods, IUserModel } from "./types/user.types";
+import { IUser, IUserMethods, IUserModel } from "./types";
 
 const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   {

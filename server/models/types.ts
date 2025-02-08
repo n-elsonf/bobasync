@@ -17,7 +17,7 @@ import { Document, Model } from "mongoose";
 // }
 
 // Interface to define the User document structure
-export interface IUser {
+export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
