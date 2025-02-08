@@ -87,7 +87,6 @@ userSchema.pre("save", async function (next) {
 
 // Method to compare password
 userSchema.methods.comparePassword = async function (
-  this: IUser & Document,
   candidatePassword: string
 ): Promise<boolean> {
   try {
@@ -98,9 +97,7 @@ userSchema.methods.comparePassword = async function (
 };
 
 // Method to get public profile (exclude sensitive data)
-userSchema.methods.getPublicProfile = function (
-  this: IUser & Document
-): Partial<IUser> {
+userSchema.methods.getPublicProfile = function (): Partial<IUser> {
   const userObject = this.toObject();
   const {
     password,

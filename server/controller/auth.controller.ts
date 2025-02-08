@@ -24,7 +24,7 @@ export class AuthController {
   //     }
   //   }
 
-  // Google authentication
+  //   //   Google authentication
   //   static async googleAuth(req: Request, res: Response, next: NextFunction) {
   //     try {
   //       const { token } = req.body;
