@@ -1,13 +1,12 @@
 import { Text, TouchableOpacity, View, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import { useRouter } from "expo-router";
 import images from '@/constants/images'
 
 export default function Index() {
 
-  const handleLogin = async () => {
-    console.log("Button pressed.")
-  }
+  const router = useRouter();
+  const handleLogin = () => router.push('/login');
 
   return (
     <SafeAreaView className="bg-white h-full border-solid">
@@ -17,7 +16,7 @@ export default function Index() {
         <Text className="text2xl font-bold text-center">A scheduling app for all your boba meets.</Text>
         <TouchableOpacity onPress={handleLogin} className='top-20 bg-white shadow-md shadow-zinc-300 rounded-full w-3/4 py-4'>
           <View className='flex flex-row items-center justify-center'>
-            <Text>Sign In </Text>
+            <Text>Sign In🧋</Text>
           </View>
         </TouchableOpacity>
       </View>
