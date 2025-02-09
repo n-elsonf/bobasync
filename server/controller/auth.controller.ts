@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { AuthService } from "../services/auth.service";
+import { AuthService, LoginInput } from "../services/auth.service";
 import { AuthRequest } from "../middleware/auth.middleware";
 
 export class AuthController {
@@ -13,18 +13,18 @@ export class AuthController {
     }
   }
 
-  //   // Login user
-  //   static async login(req: Request, res: Response, next: NextFunction) {
-  //     try {
-  //       const { email, password } = req.body;
-  //       const result = await AuthService.login(email, password);
-  //       res.status(200).json(result);
-  //     } catch (error) {
-  //       next(error);
-  //     }
-  //   }
+  // Login user
+  static async login(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email, password } = req.body;
+      const result = await AuthService.login({ email, password });
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 
-  // Google authentication
+  //   //   Google authentication
   //   static async googleAuth(req: Request, res: Response, next: NextFunction) {
   //     try {
   //       const { token } = req.body;

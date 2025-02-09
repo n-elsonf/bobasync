@@ -24,6 +24,7 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
         },
         message: (props: any) => `${props.value} is not a valid email address!`,
       },
+      index: true,
     },
     password: {
       type: String,
@@ -43,6 +44,7 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
       type: String,
       unique: true,
       sparse: true, // Allows null/undefined values to be unique
+      index: true,
     },
     profilePicture: {
       type: String,
@@ -68,8 +70,8 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
 );
 
 // Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
+// userSchema.index({ email: 1 });
+// userSchema.index({ googleId: 1 });
 
 // Pre-save middleware to hash password
 userSchema.pre("save", async function (next) {
@@ -87,7 +89,6 @@ userSchema.pre("save", async function (next) {
 
 // Method to compare password
 userSchema.methods.comparePassword = async function (
-  this: IUser & Document,
   candidatePassword: string
 ): Promise<boolean> {
   try {
@@ -98,9 +99,7 @@ userSchema.methods.comparePassword = async function (
 };
 
 // Method to get public profile (exclude sensitive data)
-userSchema.methods.getPublicProfile = function (
-  this: IUser & Document
-): Partial<IUser> {
+userSchema.methods.getPublicProfile = function (): Partial<IUser> {
   const userObject = this.toObject();
   const {
     password,

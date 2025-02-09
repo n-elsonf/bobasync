@@ -1,116 +1,23 @@
-// src/server.ts
-import express, { Request, Response, NextFunction } from "express";
-import mongoose from "mongoose";
-import cors from "cors";
 import dotenv from "dotenv";
-import passport from "passport";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import session from "express-session";
-import { User } from "./models/User";
+import mongoose from "mongoose";
+import app from "./app";
 
 // Load environment variables
 dotenv.config();
 
-// Initialize express app
-const app = express();
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-  })
-);
-
-// Session configuration
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "your-secret-key",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    },
-  })
-);
-
-// Initialize passport
-app.use(passport.initialize());
-app.use(passport.session());
-
-// Passport serialization
-passport.serializeUser((user: any, done) => {
-  done(null, user.id);
+// Handle uncaught exceptions
+process.on("uncaughtException", (err: Error) => {
+  console.error("UNCAUGHT EXCEPTION! 💥 Shutting down...");
+  console.error(err.name, err.message);
+  process.exit(1);
 });
 
-passport.deserializeUser(async (id: string, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (error) {
-    done(error, null);
-  }
-});
-
-// Google OAuth Strategy
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: `${process.env.SERVER_URL}/auth/google/callback`,
-      scope: ["profile", "email"],
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        // Check if user exists
-        let user = await User.findOne({ googleId: profile.id });
-
-        if (!user) {
-          // Create new user if doesn't exist
-          user = await User.create({
-            googleId: profile.id,
-            email: profile.emails?.[0].value,
-            name: profile.displayName,
-            profilePicture: profile.photos?.[0].value,
-            isEmailVerified: true, // Google accounts are already verified
-          });
-        }
-
-        return done(null, user);
-      } catch (error) {
-        return done(error as Error, undefined);
-      }
-    }
-  )
-);
-
-// Auth routes
-app.get(
-  "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
-
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: `${process.env.CLIENT_URL}/login`,
-    session: true,
-  }),
-  (req, res) => {
-    res.redirect(`${process.env.CLIENT_URL}/dashboard`);
-  }
-);
-
-// MongoDB Connection
-const connectDB = async () => {
+// Database connection
+const connectDB = async (): Promise<void> => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI!, {
-      // These are included in the type definitions but no longer needed in newer versions
-      // Keeping them commented for reference
+      // The following options are no longer needed in newer versions of Mongoose
+      // but kept here for reference
       // useNewUrlParser: true,
       // useUnifiedTopology: true,
       // useCreateIndex: true,
@@ -118,39 +25,47 @@ const connectDB = async () => {
     });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+
+    // Add MongoDB logging in development
+    if (process.env.NODE_ENV === "development") {
+      mongoose.set("debug", true);
+    }
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
     process.exit(1);
   }
 };
 
-// Error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message:
-      process.env.NODE_ENV === "development"
-        ? err.message
-        : "Internal server error",
-  });
-});
-
-// Health check route
-app.get("/health", (req: Request, res: Response) => {
-  res.status(200).json({ status: "ok" });
-});
-
-// Start server
+// Server configuration
 const PORT = process.env.PORT || 5000;
 
-const startServer = async () => {
+const startServer = async (): Promise<void> => {
   try {
     await connectDB();
-    app.listen(PORT, () => {
-      console.log(
-        `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
-      );
+
+    const server = app.listen(PORT, () => {
+      console.log(`
+        ################################################
+        🛡️  Server listening on port: ${PORT} 🛡️
+        ################################################
+      `);
+    });
+
+    // Handle unhandled promise rejections
+    process.on("unhandledRejection", (err: Error) => {
+      console.error("UNHANDLED REJECTION! 💥 Shutting down...");
+      console.error(err.name, err.message);
+      server.close(() => {
+        process.exit(1);
+      });
+    });
+
+    // Handle SIGTERM signal
+    process.on("SIGTERM", () => {
+      console.log("👋 SIGTERM RECEIVED. Shutting down gracefully");
+      server.close(() => {
+        console.log("💥 Process terminated!");
+      });
     });
   } catch (error) {
     console.error("Error starting server:", error);
@@ -158,6 +73,7 @@ const startServer = async () => {
   }
 };
 
+// Start the server
 startServer();
 
 // For testing purposes
