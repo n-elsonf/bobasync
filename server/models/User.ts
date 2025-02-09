@@ -24,6 +24,7 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
         },
         message: (props: any) => `${props.value} is not a valid email address!`,
       },
+      index: true,
     },
     password: {
       type: String,
@@ -43,6 +44,7 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
       type: String,
       unique: true,
       sparse: true, // Allows null/undefined values to be unique
+      index: true,
     },
     profilePicture: {
       type: String,
@@ -68,8 +70,8 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
 );
 
 // Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
+// userSchema.index({ email: 1 });
+// userSchema.index({ googleId: 1 });
 
 // Pre-save middleware to hash password
 userSchema.pre("save", async function (next) {

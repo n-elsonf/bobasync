@@ -1,4 +1,10 @@
-import express, { Application, Request, Response, NextFunction } from "express";
+import express, {
+  Application,
+  Request,
+  Response,
+  NextFunction,
+  ErrorRequestHandler,
+} from "express";
 import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
@@ -10,11 +16,12 @@ import path from "path";
 
 // Routes
 import authRoutes from "./routes/auth.routes";
-import userRoutes from "./routes/user.routes";
+// import userRoutes from "./routes/user.routes";
 
 // Middleware
 import { errorHandler } from "./middleware/error.middleware";
 import { NotFoundError } from "./utils/errors";
+import { RequestError } from "google-auth-library/build/src/transporters";
 
 class App {
   public app: Application;
@@ -79,7 +86,7 @@ class App {
 
     // API routes
     this.app.use("/api/v1/auth", authRoutes);
-    this.app.use("/api/v1/users", userRoutes);
+    // this.app.use("/api/v1/users", userRoutes);
 
     // Handle undefined routes
     this.app.all("*", (req: Request, res: Response, next: NextFunction) => {
@@ -88,7 +95,7 @@ class App {
   }
 
   private configureErrorHandling(): void {
-    this.app.use(errorHandler);
+    this.app.use(errorHandler.handleError);
   }
 }
 

@@ -1,10 +1,10 @@
 // src/services/auth.service.ts
 import User from "../models/User";
-import jwt from "jsonwebtoken";
+import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
-import { sendEmail } from "../utils/email";
+// import { sendEmail } from "../utils/email";
 import {
   AuthenticationError,
   ValidationError,
@@ -48,10 +48,12 @@ export class AuthService {
       email: user.email,
       role: user.role,
     };
+    const secret: Secret = process.env.JWT_SECRET as string;
+    const options: SignOptions = {
+      expiresIn: "1d",
+    };
 
-    return jwt.sign(payload, process.env.JWT_SECRET!, {
-      expiresIn: process.env.JWT_EXPIRES_IN || "1d",
-    });
+    return jwt.sign(payload, secret, options);
   }
 
   /**
@@ -82,25 +84,25 @@ export class AuthService {
       isEmailVerified: false,
     });
 
-    // Send verification email
-    try {
-      const verificationUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
-      await sendEmail({
-        to: user.email,
-        subject: "Please verify your email",
-        text: `Click the link to verify your email: ${verificationUrl}`,
-        html: `
-          <div>
-            <h1>Welcome to ${process.env.APP_NAME}!</h1>
-            <p>Please click the link below to verify your email:</p>
-            <a href="${verificationUrl}">Verify Email</a>
-          </div>
-        `,
-      });
-    } catch (error) {
-      // If email fails, still create user but log error
-      console.error("Verification email failed:", error);
-    }
+    // // Send verification email
+    // try {
+    //   const verificationUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+    //   await sendEmail({
+    //     to: user.email,
+    //     subject: "Please verify your email",
+    //     text: `Click the link to verify your email: ${verificationUrl}`,
+    //     html: `
+    //       <div>
+    //         <h1>Welcome to ${process.env.APP_NAME}!</h1>
+    //         <p>Please click the link below to verify your email:</p>
+    //         <a href="${verificationUrl}">Verify Email</a>
+    //       </div>
+    //     `,
+    //   });
+    // } catch (error) {
+    //   // If email fails, still create user but log error
+    //   console.error("Verification email failed:", error);
+    // }
 
     // Generate token
     const token = this.generateToken(user);
@@ -218,49 +220,49 @@ export class AuthService {
   /**
    * Request Password Reset
    */
-  public static async requestPasswordReset(
-    email: string
-  ): Promise<{ message: string }> {
-    const user = await User.findOne({ email });
-    if (!user) {
-      throw new NotFoundError("No user found with this email");
-    }
+  //   public static async requestPasswordReset(
+  //     email: string
+  //   ): Promise<{ message: string }> {
+  //     const user = await User.findOne({ email });
+  //     if (!user) {
+  //       throw new NotFoundError("No user found with this email");
+  //     }
 
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    user.resetPasswordToken = crypto
-      .createHash("sha256")
-      .update(resetToken)
-      .digest("hex");
-    user.resetPasswordExpire = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+  //     // Generate reset token
+  //     const resetToken = crypto.randomBytes(32).toString("hex");
+  //     user.resetPasswordToken = crypto
+  //       .createHash("sha256")
+  //       .update(resetToken)
+  //       .digest("hex");
+  //     user.resetPasswordExpire = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
 
-    await user.save();
+  //     await user.save();
 
-    try {
-      const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-      await sendEmail({
-        to: user.email,
-        subject: "Password Reset Request",
-        text: `To reset your password, click: ${resetUrl}`,
-        html: `
-          <div>
-            <h1>Password Reset Request</h1>
-            <p>Click the link below to reset your password:</p>
-            <a href="${resetUrl}">Reset Password</a>
-            <p>If you didn't request this, please ignore this email.</p>
-          </div>
-        `,
-      });
+  //     try {
+  //       const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+  //       await sendEmail({
+  //         to: user.email,
+  //         subject: "Password Reset Request",
+  //         text: `To reset your password, click: ${resetUrl}`,
+  //         html: `
+  //           <div>
+  //             <h1>Password Reset Request</h1>
+  //             <p>Click the link below to reset your password:</p>
+  //             <a href="${resetUrl}">Reset Password</a>
+  //             <p>If you didn't request this, please ignore this email.</p>
+  //           </div>
+  //         `,
+  //       });
 
-      return { message: "Password reset email sent" };
-    } catch (error) {
-      user.resetPasswordToken = undefined;
-      user.resetPasswordExpire = undefined;
-      await user.save();
+  //       return { message: "Password reset email sent" };
+  //     } catch (error) {
+  //       user.resetPasswordToken = undefined;
+  //       user.resetPasswordExpire = undefined;
+  //       await user.save();
 
-      throw new Error("Error sending password reset email");
-    }
-  }
+  //       throw new Error("Error sending password reset email");
+  //     }
+  //   }
 
   /**
    * Reset Password

@@ -76,7 +76,7 @@ class ErrorHandler {
     if (err instanceof mongoose.Error.CastError) {
       error = this.handleCastError(err);
     }
-    if (err.code === 11000) {
+    if ((err as any).code === 11000) {
       error = this.handleDuplicateFieldsError(err);
     }
     if (err instanceof mongoose.Error.ValidationError) {
