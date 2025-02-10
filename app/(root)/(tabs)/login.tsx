@@ -1,22 +1,38 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Keyboard } from 'react-native';
-
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Keyboard, Button } from 'react-native';
+import { api } from "../../utils/api"; // Import the API instance
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import images from '@/constants/images'
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const Login = () => {
-  const [username, setUsername] = useState('');
+const Login = ({ navigation }: any) => {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (!username || !password) {
-      Alert.alert('Error', 'Please enter both username and password.');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password.');
       return;
     }
-    Alert.alert("Good");
-    Keyboard.dismiss();
-    return;
+
+    setLoading(true);
+    try {
+      const response = await api.post("/auth/login", { email, password });
+      const { token } = response.data;
+
+      // Store JWT token in AsyncStorage for authentication persistence
+      await AsyncStorage.setItem("authToken", token);
+
+      Alert.alert("Success", "Login successful!");
+      navigation.navigate("Home"); // Navigate to Home Screen
+    } catch (error: any) {
+      console.error("Login error:", error);
+      Alert.alert("Login Failed", error.response?.data?.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -24,9 +40,9 @@ const Login = () => {
       <Text className='pb-5 text-2xl font-bold text-center'>Sign In 🧋</Text>
       <TextInput
         style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
         autoCapitalize="none"
       />
       <TextInput
@@ -36,9 +52,8 @@ const Login = () => {
         onChangeText={setPassword}
         secureTextEntry
       />
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
+      <Button title={loading ? "Logging in..." : "Login"} onPress={handleLogin} disabled={loading} />
+
     </SafeAreaView >
   );
 };
