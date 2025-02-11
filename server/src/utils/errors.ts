@@ -50,13 +50,13 @@ export class TooManyRequestsError extends AppError {
 }
 
 // Error handler middleware
-import { Request, Response, NextFunction } from "express";
+import { Response } from "express";
 
 export const errorHandler = (
   err: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
+  // _: Request,
+  res: Response
+  // _: NextFunction
 ) => {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({

@@ -10,7 +10,7 @@ export interface AuthRequest extends Request {
 
 export const protect = async (
   req: AuthRequest,
-  res: Response,
+  _: Response,
   next: NextFunction
 ) => {
   try {

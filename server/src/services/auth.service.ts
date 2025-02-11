@@ -1,7 +1,7 @@
 // src/services/auth.service.ts
 import User from "../models/User";
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+// import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
 // import { sendEmail } from "../utils/email";

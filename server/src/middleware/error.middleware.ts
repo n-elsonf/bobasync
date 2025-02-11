@@ -64,7 +64,7 @@ class ErrorHandler {
     err: Error,
     req: Request,
     res: Response,
-    next: NextFunction
+    _: NextFunction
   ): void => {
     let error = err instanceof AppError ? err : new AppError(err.message, 500);
 
