@@ -3,7 +3,7 @@ import express, {
   Request,
   Response,
   NextFunction,
-  ErrorRequestHandler,
+  // ErrorRequestHandler,
 } from "express";
 import cors from "cors";
 import morgan from "morgan";
@@ -21,7 +21,7 @@ import authRoutes from "./routes/auth.routes";
 // Middleware
 import { errorHandler } from "./middleware/error.middleware";
 import { NotFoundError } from "./utils/errors";
-import { RequestError } from "google-auth-library/build/src/transporters";
+// import { RequestError } from "google-auth-library/build/src/transporters";
 
 class App {
   public app: Application;
@@ -76,7 +76,7 @@ class App {
 
   private configureRoutes(): void {
     // Health check
-    this.app.get("/health", (req: Request, res: Response) => {
+    this.app.get("/health", (_: Request, res: Response) => {
       res.status(200).json({
         status: "success",
         message: "Server is healthy",
@@ -89,7 +89,7 @@ class App {
     // this.app.use("/api/v1/users", userRoutes);
 
     // Handle undefined routes
-    this.app.all("*", (req: Request, res: Response, next: NextFunction) => {
+    this.app.all("*", (req: Request, _: Response, next: NextFunction) => {
       next(new NotFoundError(`Can't find ${req.originalUrl} on this server!`));
     });
   }
