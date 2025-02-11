@@ -1,7 +1,7 @@
 import { Alert, Text, Platform, ActivityIndicator, FlatList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import images from '@/constants/images';
+import images from '../constants/images';
 import { useEffect, useState } from "react";
 import * as Location from 'expo-location';
 import { request, PERMISSIONS } from 'react-native-permissions';
