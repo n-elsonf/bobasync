@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Keyboard, Button } from 'react-native';
-import { api } from "../../utils/api"; // Import the API instance
+import { api } from "../utils/api"; // Import the API instance
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import images from '@/constants/images'
+import images from '../constants/images'
 import { SafeAreaView } from 'react-native-safe-area-context';
+import '../../global.css';
 
 const Login = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
