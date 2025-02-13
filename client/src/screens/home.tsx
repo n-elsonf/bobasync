@@ -1,4 +1,4 @@
-import { Alert, Text, Platform, ActivityIndicator, FlatList, View } from "react-native";
+import { StyleSheet, Alert, Text, Platform, ActivityIndicator, FlatList, View, Image, ImageBackground } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import images from '../constants/images';
@@ -70,17 +70,58 @@ const Home = () => {
         <FlatList
           data={shops}
           keyExtractor={(item) => item.place_id}
-          renderItem={({ item }) => (
-            <View style={{ padding: 10, marginBottom: 10, borderWidth: 1, borderRadius: 10 }}>
-              <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{item.name}</Text>
-              <Text>{item.vicinity}</Text>
-              <Text>Rating: ⭐ {item.rating || 'N/A'}</Text>
-            </View>
-          )}
+          renderItem={({ item }) => {
+            // Extract first photo reference (if available)
+            const photoRef = item.photos?.[0]?.photo_reference;
+            const imageUrl = photoRef
+              ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_PLACES_API_KEY}`
+              : "https://via.placeholder.com/400"; // Fallback image if no photo is available
+
+            return (
+              <ImageBackground source={{ uri: imageUrl }} style={styles.itemContainer} imageStyle={styles.image}>
+                <View style={styles.overlay}>
+                  <Text style={styles.name}>{item.name}</Text>
+                  <Text style={styles.address}>{item.vicinity}</Text>
+                  <Text style={styles.rating}>Rating: ⭐ {item.rating || 'N/A'}</Text>
+                </View>
+              </ImageBackground>
+            );
+          }}
         />
       )}
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  itemContainer: {
+    height: 150, // Adjust height for better appearance
+    borderRadius: 10,
+    overflow: "hidden", // Ensures rounded corners apply to the image
+    marginBottom: 10,
+    justifyContent: "flex-end",
+  },
+  image: {
+    borderRadius: 10, // Ensures the image itself has rounded corners
+  },
+  overlay: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent black overlay for text readability
+    padding: 10,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+  },
+  address: {
+    color: "#ddd",
+  },
+  rating: {
+    marginTop: 4,
+    fontSize: 14,
+    color: "white",
+  },
+})
+
 
 export default Home;
