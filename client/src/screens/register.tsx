@@ -10,30 +10,42 @@ const RegisterScreen = ({ navigation }: any) => {
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!fullName || !email || !password) {
-      Alert.alert("Error", "All fields are required.");
-      return;
-    }
+    const apiUrl = "http://localhost:5000/api/v1/auth/register";
 
     const userData = {
-      fullName, // 🔹 Ensure this field name is correct
+      name: fullName,
       email,
       password,
     };
 
-    console.log("📤 Sending Data to Backend:", userData); // Debugging
+    console.log("📤 Sending Data to:", apiUrl);
+    console.log("📤 Request Body:", JSON.stringify(userData, null, 2));
 
     try {
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", // ✅ Ensures JSON is sent
+        },
+        body: JSON.stringify(userData),
+      });
 
-      const response = await api.post("/auth/register", userData);
-      console.log("✅ Response from Backend:", response.data);
+      const data = await response.json();
+      console.log("✅ Response from Backend:", data);
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to register");
+      }
+
       Alert.alert("Success", "Account created successfully!");
       navigation.navigate("Home");
     } catch (error) {
-      console.error("❌ Registration error:", error.response?.data);
-      Alert.alert("Registration Failed", error.response?.data?.message || "Something went wrong.");
+      console.error("❌ Registration error:", error);
+      Alert.alert("Registration Failed", error.message || "Something went wrong.");
     }
   };
+
+
 
 
   return (
