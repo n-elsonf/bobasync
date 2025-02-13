@@ -3,49 +3,42 @@ import { View, TextInput, Button, Alert, Text } from "react-native";
 import { api } from "../utils/api"; // Import Axios instance
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { useRouter } from "expo-router";
+
 const RegisterScreen = ({ navigation }: any) => {
+
+  const router = useRouter();
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    const apiUrl = "http://localhost:5000/api/v1/auth/register";
+    if (!fullName || !email || !password) {
+      Alert.alert("Error", "All fields are required.");
+      return;
+    }
 
     const userData = {
-      name: fullName,
+      name: fullName, // 🔹 Ensure this field name is correct
       email,
       password,
     };
 
-    console.log("📤 Sending Data to:", apiUrl);
-    console.log("📤 Request Body:", JSON.stringify(userData, null, 2));
+    console.log("📤 Sending Data to Backend:", userData); // Debugging
 
     try {
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json", // ✅ Ensures JSON is sent
-        },
-        body: JSON.stringify(userData),
-      });
 
-      const data = await response.json();
-      console.log("✅ Response from Backend:", data);
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to register");
-      }
-
+      const response = await api.post("/auth/register", userData);
+      console.log("✅ Response from Backend:", response.data);
       Alert.alert("Success", "Account created successfully!");
-      navigation.navigate("Home");
-    } catch (error) {
-      console.error("❌ Registration error:", error);
-      Alert.alert("Registration Failed", error.message || "Something went wrong.");
+      router.push('./home')
+    } catch (error: any) {
+      console.error("❌ Registration error:", error.response?.data);
+      Alert.alert("Registration Failed", error.response?.data?.message || "Something went wrong.");
     }
   };
-
-
 
 
   return (
