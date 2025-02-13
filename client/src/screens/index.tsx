@@ -7,6 +7,7 @@ export default function Index() {
 
   const router = useRouter();
   const handleLogin = () => router.push('/login');
+  const handleRegister = () => router.push('/register')
 
   return (
     <SafeAreaView className="bg-white h-full border-solid">
@@ -17,6 +18,11 @@ export default function Index() {
         <TouchableOpacity onPress={handleLogin} className='top-20 bg-white shadow-md shadow-zinc-300 rounded-full w-3/4 py-4'>
           <View className='flex flex-row items-center justify-center'>
             <Text>Sign In🧋</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleRegister} className='mt-4 top-20 bg-white shadow-md shadow-zinc-300 rounded-full w-3/4 py-4'>
+          <View className='flex flex-row items-center justify-center'>
+            <Text>Create Account 🧋</Text>
           </View>
         </TouchableOpacity>
       </View>
