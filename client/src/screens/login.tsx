@@ -2,15 +2,21 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Keyboard, Button } from 'react-native';
 import { api } from "../utils/api"; // Import the API instance
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { useNavigation } from 'expo-router';
+import * as WebBrowser from "expo-web-browser";
+import * as Google from "expo-auth-session/providers/google";
 import images from '../constants/images'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import '../../global.css';
+import { ArrowLeft } from "lucide-react-native";
 
-const Login = ({ navigation }: any) => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const navigation = useNavigation();
+
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -37,7 +43,11 @@ const Login = ({ navigation }: any) => {
   };
 
   return (
+
     <SafeAreaView className='flex-1 justify-center px-5  bg-gray-100'>
+      <TouchableOpacity onPress={() => navigation.goBack()} className="absolute top-14 left-5 p-2 bg-white shadow-md shadow-zinc-300 rounded-full">
+        <ArrowLeft size={24} />
+      </TouchableOpacity>
       <Text className='pb-5 text-2xl font-bold text-center'>Sign In 🧋</Text>
       <TextInput
         style={styles.input}
