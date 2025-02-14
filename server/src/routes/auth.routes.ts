@@ -19,11 +19,11 @@ router.post(
   AuthController.login
 );
 
-// router.post(
-//   "/google",
-//   validateRequest(authValidation.googleAuth),
-//   AuthController.googleAuth
-// );
+router.post(
+  "/google",
+  validateRequest(authValidation.googleAuth),
+  AuthController.googleAuth
+);
 
 router.get("/verify-email/:token", AuthController.verifyEmail);
 

@@ -1,21 +1,5 @@
 import { Document, Model } from "mongoose";
 
-// export interface IUser {
-//   name: string;
-//   email: string;
-//   password: string;
-//   googleId?: string;
-//   profilePicture?: string;
-//   role: "user" | "admin";
-//   isEmailVerified: boolean;
-//   verificationToken?: string;
-//   resetPasswordToken?: string;
-//   resetPasswordExpire?: Date;
-//   lastLogin?: Date;
-//   createdAt: Date;
-//   updatedAt: Date;
-// }
-
 // Interface to define the User document structure
 export interface IUser extends Document {
   name: string;
@@ -32,11 +16,6 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
-
-// export interface IUserMethods {
-//   comparePassword(candidatePassword: string): Promise<boolean>;
-//   getPublicProfile(): Partial<IUser>;
-// }
 
 export interface IUserMethods {
   comparePassword(candidatePassword: string): Promise<boolean>;

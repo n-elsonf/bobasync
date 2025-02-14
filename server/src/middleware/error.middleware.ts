@@ -112,19 +112,3 @@ const errorHandler = new ErrorHandler();
 
 // Export the handleError method
 export { errorHandler };
-
-// Example usage:
-/*
-// In your app.ts or server.ts
-import { errorHandler } from './middleware/error.middleware';
-
-// After all your routes
-app.use(errorHandler.handleError);
-
-// In your controllers
-try {
-  // Your code here
-} catch (error) {
-  next(error);
-}
-*/

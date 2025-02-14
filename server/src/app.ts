@@ -21,7 +21,6 @@ import authRoutes from "./routes/auth.routes";
 // Middleware
 import { errorHandler } from "./middleware/error.middleware";
 import { NotFoundError } from "./utils/errors";
-// import { RequestError } from "google-auth-library/build/src/transporters";
 
 class App {
   public app: Application;

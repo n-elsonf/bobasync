@@ -1,10 +1,8 @@
-// src/services/auth.service.ts
 import User from "../models/User";
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
-// import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
-// import { sendEmail } from "../utils/email";
+import { sendEmail } from "../utils/email";
 import {
   AuthenticationError,
   ValidationError,
@@ -84,25 +82,25 @@ export class AuthService {
       isEmailVerified: false,
     });
 
-    // // Send verification email
-    // try {
-    //   const verificationUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
-    //   await sendEmail({
-    //     to: user.email,
-    //     subject: "Please verify your email",
-    //     text: `Click the link to verify your email: ${verificationUrl}`,
-    //     html: `
-    //       <div>
-    //         <h1>Welcome to ${process.env.APP_NAME}!</h1>
-    //         <p>Please click the link below to verify your email:</p>
-    //         <a href="${verificationUrl}">Verify Email</a>
-    //       </div>
-    //     `,
-    //   });
-    // } catch (error) {
-    //   // If email fails, still create user but log error
-    //   console.error("Verification email failed:", error);
-    // }
+    // Send verification email
+    try {
+      const verificationUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+      await sendEmail({
+        to: user.email,
+        subject: "Please verify your email",
+        text: `Click the link to verify your email: ${verificationUrl}`,
+        html: `
+          <div>
+            <h1>Welcome to ${process.env.APP_NAME}!</h1>
+            <p>Please click the link below to verify your email:</p>
+            <a href="${verificationUrl}">Verify Email</a>
+          </div>
+        `,
+      });
+    } catch (error) {
+      // If email fails, still create user but log error
+      console.error("Verification email failed:", error);
+    }
 
     // Generate token
     const token = this.generateToken(user);

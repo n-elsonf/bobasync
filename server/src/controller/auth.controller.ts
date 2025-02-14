@@ -24,16 +24,16 @@ export class AuthController {
     }
   }
 
-  //   //   Google authentication
-  //   static async googleAuth(req: Request, res: Response, next: NextFunction) {
-  //     try {
-  //       const { token } = req.body;
-  //       const result = await AuthService.googleAuth(token);
-  //       res.status(200).json(result);
-  //     } catch (error) {
-  //       next(error);
-  //     }
-  //   }
+  //   Google authentication
+  static async googleAuth(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token } = req.body;
+      const result = await AuthService.googleAuth(token);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 
   // Verify email
   static async verifyEmail(req: Request, res: Response, next: NextFunction) {
@@ -47,19 +47,19 @@ export class AuthController {
   }
 
   // Request password reset
-  //   static async requestPasswordReset(
-  //     req: Request,
-  //     res: Response,
-  //     next: NextFunction
-  //   ) {
-  //     try {
-  //       const { email } = req.body;
-  //       const result = await AuthService.requestPasswordReset(email);
-  //       res.status(200).json(result);
-  //     } catch (error) {
-  //       next(error);
-  //     }
+  // static async requestPasswordReset(
+  //   req: Request,
+  //   res: Response,
+  //   next: NextFunction
+  // ) {
+  //   try {
+  //     const { email } = req.body;
+  //     const result = await AuthService.requestPasswordReset(email);
+  //     res.status(200).json(result);
+  //   } catch (error) {
+  //     next(error);
   //   }
+  // }
 
   // Reset password
   //   static async resetPassword(req: Request, res: Response, next: NextFunction) {
