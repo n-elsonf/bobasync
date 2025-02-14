@@ -16,14 +16,30 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const navigation = useNavigation();
+  const handleForget = async () => {
 
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password.');
+      return;
+    }
+    setLoading(true);
+
+    try {
+      const response = await api.post("/auth/resetPassword", { email, password });
+      const { token } = response.data;
+    } catch (error: any) {
+      console.error("Login error:", error);
+      Alert.alert("Login Failed", error.response?.data?.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please enter both email and password.');
       return;
     }
-
     setLoading(true);
     try {
       const response = await api.post("/auth/login", { email, password });
@@ -64,6 +80,7 @@ const Login = () => {
         secureTextEntry
       />
       <Button title={loading ? "Logging in..." : "Login"} onPress={handleLogin} disabled={loading} />
+      <Button title={"Forgot my password"} onPress={handleForget} disabled={loading} />
 
     </SafeAreaView >
   );
