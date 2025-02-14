@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import User from "../models/User";
-import bcrypt from "bcryptjs";
 
 // Load environment variables
 dotenv.config();
@@ -86,15 +85,11 @@ async function seedDatabase() {
 
     for (const userData of users) {
       try {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(userData.password, salt);
-
-        const user = new User({
-          ...userData,
-          password: hashedPassword,
-        });
-
+        // Create user without manually hashing the password
+        // Let the model's pre-save middleware handle it
+        const user = new User(userData);
         const savedUser = await user.save();
+
         console.log(
           `Created user: ${userData.email} with ID: ${savedUser._id}`
         );

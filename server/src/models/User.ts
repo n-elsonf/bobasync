@@ -69,10 +69,6 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   }
 );
 
-// Indexes
-// userSchema.index({ email: 1 });
-// userSchema.index({ googleId: 1 });
-
 // Pre-save middleware to hash password
 userSchema.pre("save", async function (next) {
   // Only hash password if it has been modified
