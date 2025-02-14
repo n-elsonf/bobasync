@@ -1,13 +1,15 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Alert, Text } from "react-native";
+import { View, TextInput, Button, Alert, Text, TouchableOpacity } from "react-native";
 import { api } from "../utils/api"; // Import Axios instance
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
 import { useRouter } from "expo-router";
+import { ArrowLeft } from "lucide-react-native";
 
-const RegisterScreen = ({ navigation }: any) => {
+const RegisterScreen = () => {
 
-  const router = useRouter();
+  const navigation = useNavigation();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,7 +35,6 @@ const RegisterScreen = ({ navigation }: any) => {
       const response = await api.post("/auth/register", userData);
       console.log("✅ Response from Backend:", response.data);
       Alert.alert("Success", "Account created successfully!");
-      router.push('./home')
     } catch (error: any) {
       console.error("❌ Registration error:", error.response?.data);
       Alert.alert("Registration Failed", error.response?.data?.message || "Something went wrong.");
@@ -43,6 +44,9 @@ const RegisterScreen = ({ navigation }: any) => {
 
   return (
     <View style={{ padding: 20, flex: 1, justifyContent: 'center' }}>
+      <TouchableOpacity onPress={() => navigation.goBack()} className="absolute top-14 left-5 p-2 bg-white shadow-md shadow-zinc-300 rounded-full">
+        <ArrowLeft size={24} />
+      </TouchableOpacity>
       <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 10 }}>Create an Account</Text>
 
       <TextInput
