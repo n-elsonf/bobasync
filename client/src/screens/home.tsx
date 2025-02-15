@@ -13,7 +13,7 @@ const Home = () => {
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const GOOGLE_PLACES_API_KEY = ''
+  const GOOGLE_PLACES_API_KEY = 'AIzaSyDofVaIFtuj6P4yEubwRKikC3j9DPMWHF4'
 
   const getUserLocation = async () => {
 

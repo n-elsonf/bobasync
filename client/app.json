@@ -1,15 +1,17 @@
 {
   "expo": {
-    "name": "bobascheduler",
-    "slug": "bobascheduler",
+    "name": "bobasync",
+    "slug": "bobasync",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "owner": "n-elsonf",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bobasync.bobasync"
     },
     "android": {
       "adaptiveIcon": {
@@ -37,6 +39,20 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "048772ff-3bdf-4c5d-b30d-b29dbafa29ea"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/048772ff-3bdf-4c5d-b30d-b29dbafa29ea"
     }
   }
 }
