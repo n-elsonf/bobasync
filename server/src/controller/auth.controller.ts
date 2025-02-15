@@ -25,13 +25,23 @@ export class AuthController {
   }
 
   //   Google authentication
-  static async googleAuth(req: Request, res: Response, next: NextFunction) {
+  static async googleAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { token } = req.body;
-      const result = await AuthService.googleAuth(token);
-      res.status(200).json(result);
+      console.log("📥 Received Google Sign-In Request:", req.body);
+
+      const { idToken } = req.body;
+      if (!idToken) {
+        res.status(400).json({ message: "Missing ID Token" });
+        return;
+      }
+
+      const authResponse = await AuthService.googleAuth(idToken);
+      console.log("✅ Google Auth Success:", authResponse);
+
+      res.status(200).json(authResponse);
     } catch (error) {
-      next(error);
+      console.error("❌ Google Auth Failed:", error);
+      next(error); // ✅ Pass error to Express error handler
     }
   }
 
