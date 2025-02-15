@@ -11,7 +11,10 @@
     "owner": "n-elsonf",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bobasync.bobasync"
+      "bundleIdentifier": "com.bobasync.bobasync",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,6 +28,12 @@
       "favicon": "./src/assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.593428119578-1n7akkd70mr803vs5v0c3sm86lealk92"
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
