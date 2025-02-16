@@ -2,6 +2,7 @@ import { Document, Model, Schema } from "mongoose";
 
 // Friend request interface
 interface IFriendRequest {
+  _id: Schema.Types.ObjectId;
   from: Schema.Types.ObjectId;
   status: 'pending' | 'accepted' | 'rejected';
   createdAt: Date;
@@ -9,6 +10,7 @@ interface IFriendRequest {
 
 // Interface to define the User document structure
 export interface IUser extends Document {
+  _id: Schema.Types.ObjectId;
   name: string;
   email: string;
   password: string;

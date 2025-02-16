@@ -175,7 +175,7 @@ userSchema.methods.sendFriendRequest = async function(friendId: string | ObjectI
   });
 };
 
-userSchema.methods.acceptFriendRequest = async function(requestId: string) {
+userSchema.methods.acceptFriendRequest = async function(requestId: string | ObjectId) {
   const request = this.friendRequests.id(requestId);
   if (!request || request.status !== 'pending') {
     throw new Error('Invalid friend request');
