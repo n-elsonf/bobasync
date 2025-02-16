@@ -1,7 +1,7 @@
 // src/models/User.ts
-import mongoose, { Schema } from "mongoose";
+import mongoose, { ObjectId, Schema, Types } from "mongoose";
 import bcrypt from "bcryptjs";
-import { IUser, IUserMethods, IUserModel } from "./types";
+import { IUser, IUserMethods, IUserModel, PublicUser } from "./types";
 
 const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   {
@@ -61,6 +61,32 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
       type: Date,
       default: null,
     },
+    friends: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    
+    friendRequests: [{
+      from: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      status: {
+        type: String,
+        enum: ['pending', 'accepted', 'rejected'],
+        default: 'pending'
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+
+    blockedUsers: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      sparse: true
+    }]
   },
   {
     timestamps: true, // Automatically manage createdAt and updatedAt
@@ -95,18 +121,102 @@ userSchema.methods.comparePassword = async function (
 };
 
 // Method to get public profile (exclude sensitive data)
-userSchema.methods.getPublicProfile = function (): Partial<IUser> {
+userSchema.methods.getPublicProfile = function (): PublicUser {
   const userObject = this.toObject();
+  // Remove sensitive fields
   const {
     password,
     verificationToken,
     resetPasswordToken,
     resetPasswordExpire,
+    blockedUsers,
     ...publicData
   } = userObject;
 
   return publicData;
 };
+
+// Add friend-related methods
+userSchema.methods.sendFriendRequest = async function(friendId: string | ObjectId) {
+  const friendObjectId = typeof friendId === 'string' ? new Schema.Types.ObjectId(friendId) : friendId;
+  // Check if already friends
+  if (this.friends.includes(friendObjectId)) {
+    throw new Error('Already friends with this user');
+  }
+
+  // Check if blocked
+  if (this.blockedUsers.includes(friendObjectId) || 
+      (await User.findById(friendId))?.blockedUsers.includes(this._id)) {
+    throw new Error('Unable to send friend request');
+  }
+
+  // Check for existing requests
+  const targetUser = await User.findById(friendId);
+  if (!targetUser) {
+    throw new Error('User not found');
+  }
+
+  const existingRequest = targetUser.friendRequests.find(
+    request => request.from.toString() === this._id.toString()
+  );
+
+  if (existingRequest) {
+    throw new Error('Friend request already sent');
+  }
+
+  // Send friend request
+  await User.findByIdAndUpdate(friendId, {
+    $push: {
+      friendRequests: {
+        from: this._id,
+        status: 'pending'
+      }
+    }
+  });
+};
+
+userSchema.methods.acceptFriendRequest = async function(requestId: string) {
+  const request = this.friendRequests.id(requestId);
+  if (!request || request.status !== 'pending') {
+    throw new Error('Invalid friend request');
+  }
+
+  // Update request status
+  request.status = 'accepted';
+  
+  // Add to friends list for both users
+  this.friends.push(request.from);
+  await User.findByIdAndUpdate(request.from, {
+    $push: { friends: this._id }
+  });
+
+  await this.save();
+};
+
+userSchema.methods.rejectFriendRequest = async function(requestId: string) {
+  const request = this.friendRequests.id(requestId);
+  if (!request || request.status !== 'pending') {
+    throw new Error('Invalid friend request');
+  }
+
+  request.status = 'rejected';
+  await this.save();
+};
+
+userSchema.methods.removeFriend = async function(friendId: string) {
+  if (!this.friends.includes(friendId)) {
+    throw new Error('User is not a friend');
+  }
+
+  // Remove from both users' friend lists
+  this.friends = this.friends.filter(id => id.toString() !== friendId.toString());
+  await User.findByIdAndUpdate(friendId, {
+    $pull: { friends: this._id }
+  });
+
+  await this.save();
+};
+
 
 // Static method to find user by email
 userSchema.static("findByEmail", async function findByEmail(email: string) {
