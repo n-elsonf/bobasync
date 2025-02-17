@@ -6,6 +6,8 @@ import * as Google from "expo-auth-session/providers/google";
 import images from '../constants/images';
 import React, { useEffect } from "react";
 import * as AuthSession from "expo-auth-session";
+import { GOOGLE_IOS_ID } from "@env"
+
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -20,10 +22,7 @@ export default function Index() {
   });
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: process.env.CLIENT_ID
-    iosClientId: process.env.IOS_CLIENT_ID
-    androidClientId: process.env.ANDROID_CLIENT_ID,
-    redirectUri: redirectUri,
+    iosClientId: GOOGLE_IOS_ID,
     scopes: ["profile", "email"],
   });
 
