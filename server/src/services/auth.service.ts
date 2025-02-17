@@ -1,4 +1,4 @@
-import User from "../models/User";
+import User from "../models/user";
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";

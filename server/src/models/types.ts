@@ -3,6 +3,7 @@ import { Document, Model, Schema } from "mongoose";
 // Friend request interface
 interface IFriendRequest {
   _id: Schema.Types.ObjectId;
+  // friendId who sent the request
   from: Schema.Types.ObjectId;
   status: 'pending' | 'accepted' | 'rejected';
   createdAt: Date;
@@ -27,7 +28,14 @@ export interface IUser extends Document {
   
   // Friend-related fields
   friends: Schema.Types.ObjectId[];
+  // Map from requestId to friend request
   friendRequests: IFriendRequest[];
+
+  friendRequestsWithRequestId: Map<Schema.Types.ObjectId, IFriendRequest>;
+  // Map from senderId to friend request
+  friendRequestsWithSenderId: Map<Schema.Types.ObjectId, IFriendRequest>;
+
+  // List of blocked users
   blockedUsers: Schema.Types.ObjectId[];
 }
 

@@ -1,5 +1,5 @@
 // src/models/User.ts
-import mongoose, { ObjectId, Schema, Types } from "mongoose";
+import mongoose, { ObjectId, Schema} from "mongoose";
 import bcrypt from "bcryptjs";
 import { IUser, IUserMethods, IUserModel, PublicUser } from "./types";
 
@@ -156,10 +156,7 @@ userSchema.methods.sendFriendRequest = async function(friendId: string | ObjectI
     throw new Error('User not found');
   }
 
-  const existingRequest = targetUser.friendRequests.find(
-    request => request.from.toString() === this._id.toString()
-  );
-
+  const existingRequest = targetUser.friendRequestsWithSenderId.get(this._id);
   if (existingRequest) {
     throw new Error('Friend request already sent');
   }
@@ -176,7 +173,8 @@ userSchema.methods.sendFriendRequest = async function(friendId: string | ObjectI
 };
 
 userSchema.methods.acceptFriendRequest = async function(requestId: string | ObjectId) {
-  const request = this.friendRequests.id(requestId);
+  const requestObjectId = typeof requestId === 'string' ? new Schema.Types.ObjectId(requestId) : requestId;
+  const request = this.friendRequests.get(requestObjectId);
   if (!request || request.status !== 'pending') {
     throw new Error('Invalid friend request');
   }
@@ -193,8 +191,9 @@ userSchema.methods.acceptFriendRequest = async function(requestId: string | Obje
   await this.save();
 };
 
-userSchema.methods.rejectFriendRequest = async function(requestId: string) {
-  const request = this.friendRequests.id(requestId);
+userSchema.methods.rejectFriendRequest = async function(requestId: string | ObjectId) {
+  const requestObjectId = typeof requestId === 'string' ? new Schema.Types.ObjectId(requestId) : requestId;
+  const request = this.friendRequests.get(requestObjectId);
   if (!request || request.status !== 'pending') {
     throw new Error('Invalid friend request');
   }
@@ -203,8 +202,9 @@ userSchema.methods.rejectFriendRequest = async function(requestId: string) {
   await this.save();
 };
 
-userSchema.methods.removeFriend = async function(friendId: string) {
-  if (!this.friends.includes(friendId)) {
+userSchema.methods.removeFriend = async function(friendId: string | ObjectId) {
+  const friendObjectId = typeof friendId === 'string' ? new Schema.Types.ObjectId(friendId) : friendId;
+  if (!this.friends.includes(friendObjectId)) {
     throw new Error('User is not a friend');
   }
 
@@ -232,33 +232,3 @@ userSchema.virtual("fullName").get(function (this: IUser) {
 const User = mongoose.model<IUser, IUserModel>("User", userSchema);
 
 export default User;
-
-// Example usage:
-/*
-import User from './models/User';
-
-// Create new user
-const createUser = async () => {
-  try {
-    const user = await User.create({
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'password123'
-    });
-    return user.getPublicProfile();
-  } catch (error) {
-    throw error;
-  }
-};
-
-// Find user by email
-const findUser = async (email: string) => {
-  const user = await User.findByEmail(email);
-  return user?.getPublicProfile();
-};
-
-// Compare password
-const validatePassword = async (user: IUser & Document, password: string) => {
-  return await user.comparePassword(password);
-};
-*/
