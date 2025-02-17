@@ -13,14 +13,22 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.bobasync.bobasync",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.917950713206-l1s67hp81i778ui3685meppjedndg442"
+            ]
+          }
+        ]
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.bobasync.bobasync"
     },
     "web": {
       "bundler": "metro",
@@ -31,7 +39,7 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.593428119578-1n7akkd70mr803vs5v0c3sm86lealk92"
+          "iosUrlScheme": "com.googleusercontent.apps.917950713206-l1s67hp81i778ui3685meppjedndg442"
         }
       ],
       "expo-router",
@@ -57,9 +65,7 @@
         "projectId": "048772ff-3bdf-4c5d-b30d-b29dbafa29ea"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/048772ff-3bdf-4c5d-b30d-b29dbafa29ea"
     }
