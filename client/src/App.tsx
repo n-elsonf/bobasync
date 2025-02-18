@@ -13,8 +13,10 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <Index />
+    // <Login />
+    <ExpoRoot context={require.context('./screens')} />
   )
 }
 
-registerRootComponent(App)
+// registerRootComponent(App)
+AppRegistry.registerComponent("main", () => App);
