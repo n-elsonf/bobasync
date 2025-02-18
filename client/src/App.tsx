@@ -4,14 +4,17 @@ import { AppRegistry, SafeAreaView, Text, View } from "react-native";
 import '../global.css'
 import Login from "./screens/login";
 import { ExpoRoot } from "expo-router";
+import Index from "./app/index";
+import { registerRootComponent } from 'expo';
+
 
 const Stack = createNativeStackNavigator();
 
 
 export default function App() {
   return (
-    <ExpoRoot context={require.context('./screens')} />
+    <Index />
   )
 }
 
-AppRegistry.registerComponent("main", () => App);
+registerRootComponent(App)
