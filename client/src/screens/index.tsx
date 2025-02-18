@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View, Image } from "react-native";
+import { Text, TouchableOpacity, View, Image, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -7,6 +7,8 @@ import images from '../constants/images';
 import React, { useEffect } from "react";
 import * as AuthSession from "expo-auth-session";
 import { GOOGLE_IOS_ID } from "@env"
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { api } from "../utils/api";
 
 
 WebBrowser.maybeCompleteAuthSession();
@@ -23,16 +25,49 @@ export default function Index() {
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: GOOGLE_IOS_ID,
+    responseType: "id_token",
     scopes: ["profile", "email"],
   });
 
   const handleToken = () => {
     if (response?.type === "success") {
       const { authentication } = response;
-      const token = authentication?.accessToken;
-      console.log("token: ", token);
+      const token: string | undefined = authentication?.idToken;
+
+      if (!token) {
+        console.error("Error: idToken is missing.");
+        return;
+      }
+
+      console.log("Token extracted:", token);
+      sendTokenToBackend(token); // Now guaranteed to be a string
     }
   }
+
+  const sendTokenToBackend = async (idToken: string) => {
+    try {
+      console.log("Sending token to backend:", idToken);
+
+      const res = await api.post("/auth/google", { idToken });
+
+      console.log("Backend response:", res.data);
+
+      const { token, user } = res.data;
+      if (!token) {
+        throw new Error("Token missing in backend response.");
+      }
+
+      await AsyncStorage.setItem("authToken", token);
+      Alert.alert("Success", `Welcome ${user.name}!`);
+    } catch (error: any) {
+      console.error("Google Sign-In Error:", error);
+      Alert.alert(
+        "Google Login Failed",
+        error.response?.data?.message || "Something went wrong."
+      );
+    }
+  };
+
 
   useEffect(() => {
     handleToken();
