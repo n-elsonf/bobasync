@@ -3,19 +3,6 @@ import mongoose, { ObjectId, Schema} from "mongoose";
 import bcrypt from "bcryptjs";
 import { IUser, IUserMethods, IUserModel, PublicUser } from "./types";
 
-// is called whenever a newFriendRequest is added to the user's friendRequests array
-function populateFriendRequestMaps(user: IUser) {
-  // Initialize maps
-  user.friendRequestsWithRequestId = new Map();
-  user.friendRequestsWithSenderId = new Map();
-  
-  // Populate both maps from the array
-  user.friendRequests.forEach(request => {
-    user.friendRequestsWithRequestId.set(request._id, request);
-    user.friendRequestsWithSenderId.set(request.from, request);
-  });
-}
-
 const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   {
     name: {
@@ -108,6 +95,22 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   }
 );
 
+userSchema.post(['find', 'findOne', 'findById'], function(docs) {
+  // Handle both single doc and array of docs
+  const documents = Array.isArray(docs) ? docs : [docs];
+  
+  documents.forEach(doc => {
+    if (doc && doc.friendRequests) {
+      // Initialize maps
+      doc.friendRequestsWithRequestId = new Map(
+        doc.friendRequests.map(request => [request._id, request])
+      );
+      doc.friendRequestsWithSenderId = new Map(
+        doc.friendRequests.map(request => [request.from, request])
+      );
+    }
+  });
+});
 // Pre-save middleware to hash password
 userSchema.pre("save", async function (next) {
   // Only hash password if it has been modified
