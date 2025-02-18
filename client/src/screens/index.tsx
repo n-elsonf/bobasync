@@ -25,7 +25,6 @@ export default function Index() {
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: GOOGLE_IOS_ID,
-    responseType: "id_token",
     scopes: ["profile", "email"],
   });
 
