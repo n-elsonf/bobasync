@@ -3,6 +3,19 @@ import mongoose, { ObjectId, Schema} from "mongoose";
 import bcrypt from "bcryptjs";
 import { IUser, IUserMethods, IUserModel, PublicUser } from "./types";
 
+// is called whenever a newFriendRequest is added to the user's friendRequests array
+function populateFriendRequestMaps(user: IUser) {
+  // Initialize maps
+  user.friendRequestsWithRequestId = new Map();
+  user.friendRequestsWithSenderId = new Map();
+  
+  // Populate both maps from the array
+  user.friendRequests.forEach(request => {
+    user.friendRequestsWithRequestId.set(request._id, request);
+    user.friendRequestsWithSenderId.set(request.from, request);
+  });
+}
+
 const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   {
     name: {
@@ -174,7 +187,7 @@ userSchema.methods.sendFriendRequest = async function(friendId: string | ObjectI
 
 userSchema.methods.acceptFriendRequest = async function(requestId: string | ObjectId) {
   const requestObjectId = typeof requestId === 'string' ? new Schema.Types.ObjectId(requestId) : requestId;
-  const request = this.friendRequests.get(requestObjectId);
+  const request = this.friendRequestsWithRequestId.get(requestObjectId);
   if (!request || request.status !== 'pending') {
     throw new Error('Invalid friend request');
   }
@@ -193,7 +206,7 @@ userSchema.methods.acceptFriendRequest = async function(requestId: string | Obje
 
 userSchema.methods.rejectFriendRequest = async function(requestId: string | ObjectId) {
   const requestObjectId = typeof requestId === 'string' ? new Schema.Types.ObjectId(requestId) : requestId;
-  const request = this.friendRequests.get(requestObjectId);
+  const request = this.friendRequestsWithRequestId.get(requestObjectId);
   if (!request || request.status !== 'pending') {
     throw new Error('Invalid friend request');
   }

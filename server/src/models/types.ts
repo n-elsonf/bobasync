@@ -30,13 +30,15 @@ export interface IUser extends Document {
   friends: Schema.Types.ObjectId[];
   // Map from requestId to friend request
   friendRequests: IFriendRequest[];
+  // List of blocked users
+  blockedUsers: Schema.Types.ObjectId[];
 
+  // fields not included in schema
+  // Map from requestId to friend request
   friendRequestsWithRequestId: Map<Schema.Types.ObjectId, IFriendRequest>;
   // Map from senderId to friend request
   friendRequestsWithSenderId: Map<Schema.Types.ObjectId, IFriendRequest>;
-
-  // List of blocked users
-  blockedUsers: Schema.Types.ObjectId[];
+  
 }
 
 export interface IUserMethods {
