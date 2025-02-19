@@ -18,11 +18,6 @@ export default function Index() {
   const handleLogin = () => router.push('/login');
   const handleRegister = () => router.push('/register');
 
-
-  const redirectUri = AuthSession.makeRedirectUri({
-    useProxy: true,
-  });
-
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: GOOGLE_IOS_ID,
     scopes: ["profile", "email"],
