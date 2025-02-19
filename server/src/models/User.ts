@@ -95,7 +95,7 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   }
 );
 
-userSchema.post(['find', 'findOne', 'findById'], function(docs) {
+userSchema.post('find', function(docs) {
   // Handle both single doc and array of docs
   const documents = Array.isArray(docs) ? docs : [docs];
   
