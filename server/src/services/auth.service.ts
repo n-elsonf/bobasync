@@ -147,6 +147,7 @@ export class AuthService {
    */
   public static async googleAuth(idToken: string): Promise<AuthResponse> {
     try {
+      console.log("Google ID Token:", idToken);
       // Verify Google token
       const ticket = await this.googleClient.verifyIdToken({
         idToken,
@@ -187,6 +188,7 @@ export class AuthService {
         token,
       };
     } catch (error) {
+      console.log(error)
       throw new AuthenticationError("Google authentication failed");
     }
   }

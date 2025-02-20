@@ -95,22 +95,22 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   }
 );
 
-userSchema.post('find', function(docs) {
-  // Handle both single doc and array of docs
-  const documents = Array.isArray(docs) ? docs : [docs];
+// userSchema.post('find', function(docs) {
+//   // Handle both single doc and array of docs
+//   const documents = Array.isArray(docs) ? docs : [docs];
   
-  documents.forEach(doc => {
-    if (doc && doc.friendRequests) {
-      // Initialize maps
-      doc.friendRequestsWithRequestId = new Map(
-        doc.friendRequests.map(request => [request._id, request])
-      );
-      doc.friendRequestsWithSenderId = new Map(
-        doc.friendRequests.map(request => [request.from, request])
-      );
-    }
-  });
-});
+//   documents.forEach(doc => {
+//     if (doc && doc.friendRequests) {
+//       // Initialize maps
+//       doc.friendRequestsWithRequestId = new Map(
+//         doc.friendRequests.map(request => [request._id, request])
+//       );
+//       doc.friendRequestsWithSenderId = new Map(
+//         doc.friendRequests.map(request => [request.from, request])
+//       );
+//     }
+//   });
+// });
 // Pre-save middleware to hash password
 userSchema.pre("save", async function (next) {
   // Only hash password if it has been modified
