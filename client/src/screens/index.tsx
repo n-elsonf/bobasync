@@ -18,11 +18,6 @@ export default function Index() {
   const handleLogin = () => router.push('/login');
   const handleRegister = () => router.push('/register');
 
-
-  const redirectUri = AuthSession.makeRedirectUri({
-    useProxy: true,
-  });
-
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: GOOGLE_IOS_ID,
     scopes: ["profile", "email"],
@@ -43,20 +38,20 @@ export default function Index() {
     }
   }
 
-  const sendTokenToBackend = async (idToken: string) => {
+  const sendTokenToBackend = async (token: string) => {
     try {
-      console.log("Sending token to backend:", idToken);
+      console.log("Sending token to backend:", token);
 
-      const res = await api.post("/auth/google", { idToken });
+      const res = await api.post("/auth/google", { token });
 
       console.log("Backend response:", res.data);
 
-      const { token, user } = res.data;
-      if (!token) {
+      const { authToken, user } = res.data;
+      if (!authToken) {
         throw new Error("Token missing in backend response.");
       }
 
-      await AsyncStorage.setItem("authToken", token);
+      await AsyncStorage.setItem("authToken", authToken);
       Alert.alert("Success", `Welcome ${user.name}!`);
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
