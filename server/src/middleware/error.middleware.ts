@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { AppError } from "../utils/errors";
+import * as Error from "../utils/errors";
 
 interface ErrorResponse {
   status: string;
@@ -23,27 +24,27 @@ class ErrorHandler {
 
   private handleCastError(err: mongoose.Error.CastError): AppError {
     const message = `Invalid ${err.path}: ${err.value}`;
-    return new AppError(message, 400);
+    return new Error.ValidationError(message);
   }
 
   private handleDuplicateFieldsError(err: any): AppError {
     const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
     const message = `Duplicate field value: ${value}. Please use another value.`;
-    return new AppError(message, 400);
+    return new Error.ValidationError(message);
   }
 
   private handleValidationError(err: mongoose.Error.ValidationError): AppError {
     const errors = Object.values(err.errors).map((el) => el.message);
     const message = `Invalid input data. ${errors.join(". ")}`;
-    return new AppError(message, 400);
+    return new Error.ValidationError(message);
   }
 
   private handleJWTError(): AppError {
-    return new AppError("Invalid token. Please log in again.", 401);
+    return new Error.AuthenticationError("Invalid token. Please log in again.");
   }
 
   private handleJWTExpiredError(): AppError {
-    return new AppError("Your token has expired. Please log in again.", 401);
+    return new Error.AuthenticationError("Your token has expired. Please log in again.");
   }
 
   private formatError(err: AppError): ErrorResponse {
