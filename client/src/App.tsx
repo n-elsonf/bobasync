@@ -7,6 +7,7 @@ import { ExpoRoot } from "expo-router";
 import Index from "./app/index";
 import { registerRootComponent } from 'expo';
 import Schedule from "./screens/calendar";
+import Events from "./screens/events";
 
 
 const Stack = createNativeStackNavigator();
@@ -15,8 +16,8 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
     // <Login />
-    <Schedule />
-    // <ExpoRoot context={require.context('./screens')} />
+    // <Events />
+    <ExpoRoot context={require.context('./screens')} />
   )
 }
 
