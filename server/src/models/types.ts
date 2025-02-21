@@ -1,7 +1,7 @@
 import { Document, Model, Schema } from "mongoose";
 
 // Friend request interface
-interface IFriendRequest {
+export interface IFriendRequest {
   _id: Schema.Types.ObjectId;
   // friendId who sent the request
   from: Schema.Types.ObjectId;
@@ -38,7 +38,7 @@ export interface IUser extends Document {
   friendRequestsWithRequestId: Map<Schema.Types.ObjectId, IFriendRequest>;
   // Map from senderId to friend request
   friendRequestsWithSenderId: Map<Schema.Types.ObjectId, IFriendRequest>;
-  
+
 }
 
 export interface IUserMethods {

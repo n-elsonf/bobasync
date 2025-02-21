@@ -1,7 +1,7 @@
 // src/models/User.ts
 import mongoose, { ObjectId, Schema} from "mongoose";
 import bcrypt from "bcryptjs";
-import { IUser, IUserMethods, IUserModel, PublicUser } from "./types";
+import { IUser, IUserMethods, IUserModel, PublicUser, IFriendRequest } from "./types";
 
 const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   {
@@ -95,22 +95,34 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   }
 );
 
-// userSchema.post('find', function(docs) {
-//   // Handle both single doc and array of docs
-//   const documents = Array.isArray(docs) ? docs : [docs];
+// Helper function to initialize maps for a document
+const initializeMaps = function(docs: any) {
+  // Handle both single doc and array of docs
+  const documents = Array.isArray(docs) ? docs : [docs];
   
-//   documents.forEach(doc => {
-//     if (doc && doc.friendRequests) {
-//       // Initialize maps
-//       doc.friendRequestsWithRequestId = new Map(
-//         doc.friendRequests.map(request => [request._id, request])
-//       );
-//       doc.friendRequestsWithSenderId = new Map(
-//         doc.friendRequests.map(request => [request.from, request])
-//       );
-//     }
-//   });
-// });
+  documents.forEach(doc => {
+    if (doc && doc.friendRequests) {
+      // Initialize request ID map
+      doc.friendRequestsWithRequestId = new Map(
+        doc.friendRequests.map((request: IFriendRequest) => [request._id, request])
+      );
+      
+      // Initialize sender ID map
+      doc.friendRequestsWithSenderId = new Map(
+        doc.friendRequests.map((request: IFriendRequest) => [request.from, request])
+      );
+    }
+  });
+};
+
+// Initialize maps when document is loaded
+userSchema.post("find", initializeMaps);
+userSchema.post("findOne", initializeMaps);
+
+// Also handle init to ensure maps are created when documents are initialized
+userSchema.post('init', initializeMaps);
+
+
 // Pre-save middleware to hash password
 userSchema.pre("save", async function (next) {
   // Only hash password if it has been modified
