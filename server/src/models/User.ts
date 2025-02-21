@@ -1,7 +1,7 @@
 // src/models/User.ts
 import mongoose, { ObjectId, Schema} from "mongoose";
 import bcrypt from "bcryptjs";
-import { IUser, IUserMethods, IUserModel, PublicUser, IFriendRequest } from "./types";
+import { IUser, IUserMethods, IUserModel, PublicUser, IFriendRequest } from "../types/user";
 
 const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   {

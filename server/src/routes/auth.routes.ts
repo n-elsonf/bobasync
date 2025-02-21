@@ -25,7 +25,10 @@ router.post(
   AuthController.googleAuth
 );
 
-router.get("/verify-email/:token", AuthController.verifyEmail);
+router.get("/verify-email/:token", 
+  validateRequest(authValidation.verifyEmail), 
+  AuthController.verifyEmail
+);
 
 router.post(
   "/forgot-password",
@@ -38,12 +41,6 @@ router.post(
   validateRequest(authValidation.resetPassword),
   AuthController.resetPassword
 );
-
-// router.post(
-//   "/validate-token",
-//   validateRequest(authValidation.validateToken),
-//   AuthController.validateToken
-// );
 
 // Protected routes
 router.get("/me", protect, AuthController.getCurrentUser);

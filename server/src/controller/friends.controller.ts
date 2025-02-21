@@ -1,14 +1,12 @@
 import { Request, Response } from 'express';
 import User from '../models/user';
-import { Types } from 'mongoose';
-// import { ApiError } from '../utils/errors'
+import { Schema } from 'mongoose';
 
 export class FriendController {
   /**
    * Get all friends of the current user
    */
   static async getFriends(req: Request, res: Response) {
-    const id = req.body;
     const user = await User.findById(req.user!._id)
       .populate('friends', 'name email profilePicture');
 
@@ -44,7 +42,7 @@ export class FriendController {
 
     // Add friend request to target user
     targetUser!.friendRequests.push({
-      _id: new Types.ObjectId(),
+      _id: new Schema.Types.ObjectId(),
       from: req.user!._id,
       status: 'pending',
       createdAt: new Date()
