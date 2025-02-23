@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import User from '../models/user';
-import { Schema } from 'mongoose';
+import { Types } from 'mongoose';
 
 export class FriendController {
   /**
@@ -42,7 +42,7 @@ export class FriendController {
 
     // Add friend request to target user
     targetUser!.friendRequests.push({
-      _id: new Schema.Types.ObjectId(),
+      _id: new Types.ObjectId(),
       from: req.user!._id,
       status: 'pending',
       createdAt: new Date()

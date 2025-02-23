@@ -1,7 +1,8 @@
 // src/models/User.ts
-import mongoose, { ObjectId, Schema} from "mongoose";
+import mongoose, { Types, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
-import { IUser, IUserMethods, IUserModel, PublicUser, IFriendRequest } from "../types/user";
+import { IUser, IUserMethods, IUserModel, PublicUser } from "../types/user";
+import { IFriendRequest } from "../types/friendRequest";
 
 const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   {
@@ -165,8 +166,8 @@ userSchema.methods.getPublicProfile = function (): PublicUser {
 };
 
 // Add friend-related methods
-userSchema.methods.sendFriendRequest = async function(friendId: string | ObjectId) {
-  const friendObjectId = typeof friendId === 'string' ? new Schema.Types.ObjectId(friendId) : friendId;
+userSchema.methods.sendFriendRequest = async function(friendId: string | Types.ObjectId) {
+  const friendObjectId = typeof friendId === 'string' ? new Types.ObjectId(friendId) : friendId;
   // Check if already friends
   if (this.friends.includes(friendObjectId)) {
     throw new Error('Already friends with this user');
@@ -200,8 +201,8 @@ userSchema.methods.sendFriendRequest = async function(friendId: string | ObjectI
   });
 };
 
-userSchema.methods.acceptFriendRequest = async function(requestId: string | ObjectId) {
-  const requestObjectId = typeof requestId === 'string' ? new Schema.Types.ObjectId(requestId) : requestId;
+userSchema.methods.acceptFriendRequest = async function(requestId: string | Types.ObjectId) {
+  const requestObjectId = typeof requestId === 'string' ? new Types.ObjectId(requestId) : requestId;
   const request = this.friendRequestsWithRequestId.get(requestObjectId);
   if (!request || request.status !== 'pending') {
     throw new Error('Invalid friend request');
@@ -219,8 +220,8 @@ userSchema.methods.acceptFriendRequest = async function(requestId: string | Obje
   await this.save();
 };
 
-userSchema.methods.rejectFriendRequest = async function(requestId: string | ObjectId) {
-  const requestObjectId = typeof requestId === 'string' ? new Schema.Types.ObjectId(requestId) : requestId;
+userSchema.methods.rejectFriendRequest = async function(requestId: string | Types.ObjectId) {
+  const requestObjectId = typeof requestId === 'string' ? new Types.ObjectId(requestId) : requestId;
   const request = this.friendRequestsWithRequestId.get(requestObjectId);
   if (!request || request.status !== 'pending') {
     throw new Error('Invalid friend request');
@@ -230,8 +231,8 @@ userSchema.methods.rejectFriendRequest = async function(requestId: string | Obje
   await this.save();
 };
 
-userSchema.methods.removeFriend = async function(friendId: string | ObjectId) {
-  const friendObjectId = typeof friendId === 'string' ? new Schema.Types.ObjectId(friendId) : friendId;
+userSchema.methods.removeFriend = async function(friendId: string | Types.ObjectId) {
+  const friendObjectId = typeof friendId === 'string' ? new Types.ObjectId(friendId) : friendId;
   if (!this.friends.includes(friendObjectId)) {
     throw new Error('User is not a friend');
   }
