@@ -46,12 +46,12 @@ export default function Index() {
 
       console.log("Backend response:", res.data);
 
-      const { authToken, user } = res.data;
-      if (!authToken) {
-        throw new Error("Token missing in backend response.");
+      const { user, token: idToken } = res.data;
+      if (!user) {
+        throw new Error("User missing in backend response.");
       }
 
-      await AsyncStorage.setItem("authToken", authToken);
+      await AsyncStorage.setItem("authToken", idToken);
       Alert.alert("Success", `Welcome ${user.name}!`);
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
