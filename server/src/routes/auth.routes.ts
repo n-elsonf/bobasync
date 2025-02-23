@@ -27,17 +27,17 @@ router.post(
 
 router.get("/verify-email/:token", AuthController.verifyEmail);
 
-// router.post(
-//   "/forgot-password",
-//   validateRequest(authValidation.forgotPassword),
-//   AuthController.requestPasswordReset
-// );
+router.post(
+  "/forgot-password",
+  validateRequest(authValidation.forgotPassword),
+  AuthController.requestPasswordReset
+);
 
-// router.post(
-//   "/reset-password/:token",
-//   validateRequest(authValidation.resetPassword),
-//   AuthController.resetPassword
-// );
+router.post(
+  "/reset-password/:token",
+  validateRequest(authValidation.resetPassword),
+  AuthController.resetPassword
+);
 
 // router.post(
 //   "/validate-token",

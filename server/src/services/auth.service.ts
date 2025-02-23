@@ -1,4 +1,4 @@
-import User from "../models/User";
+import User from "../models/user";
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
@@ -147,6 +147,7 @@ export class AuthService {
    */
   public static async googleAuth(idToken: string): Promise<AuthResponse> {
     try {
+      console.log("Google ID Token:", idToken);
       // Verify Google token
       const ticket = await this.googleClient.verifyIdToken({
         idToken,
@@ -187,6 +188,7 @@ export class AuthService {
         token,
       };
     } catch (error) {
+      console.log(error)
       throw new AuthenticationError("Google authentication failed");
     }
   }
@@ -218,49 +220,49 @@ export class AuthService {
   /**
    * Request Password Reset
    */
-  //   public static async requestPasswordReset(
-  //     email: string
-  //   ): Promise<{ message: string }> {
-  //     const user = await User.findOne({ email });
-  //     if (!user) {
-  //       throw new NotFoundError("No user found with this email");
-  //     }
+  public static async requestPasswordReset(
+    email: string
+  ): Promise<{ message: string }> {
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new NotFoundError("No user found with this email");
+    }
 
-  //     // Generate reset token
-  //     const resetToken = crypto.randomBytes(32).toString("hex");
-  //     user.resetPasswordToken = crypto
-  //       .createHash("sha256")
-  //       .update(resetToken)
-  //       .digest("hex");
-  //     user.resetPasswordExpire = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+    user.resetPasswordExpire = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
 
-  //     await user.save();
+    await user.save();
 
-  //     try {
-  //       const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-  //       await sendEmail({
-  //         to: user.email,
-  //         subject: "Password Reset Request",
-  //         text: `To reset your password, click: ${resetUrl}`,
-  //         html: `
-  //           <div>
-  //             <h1>Password Reset Request</h1>
-  //             <p>Click the link below to reset your password:</p>
-  //             <a href="${resetUrl}">Reset Password</a>
-  //             <p>If you didn't request this, please ignore this email.</p>
-  //           </div>
-  //         `,
-  //       });
+    try {
+      const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+      await sendEmail({
+        to: user.email,
+        subject: "Password Reset Request",
+        text: `To reset your password, click: ${resetUrl}`,
+        html: `
+            <div>
+              <h1>Password Reset Request</h1>
+              <p>Click the link below to reset your password:</p>
+              <a href="${resetUrl}">Reset Password</a>
+              <p>If you didn't request this, please ignore this email.</p>
+            </div>
+          `,
+      });
 
-  //       return { message: "Password reset email sent" };
-  //     } catch (error) {
-  //       user.resetPasswordToken = undefined;
-  //       user.resetPasswordExpire = undefined;
-  //       await user.save();
+      return { message: "Password reset email sent" };
+    } catch (error) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save();
 
-  //       throw new Error("Error sending password reset email");
-  //     }
-  //   }
+      throw new Error("Error sending password reset email");
+    }
+  }
 
   /**
    * Reset Password

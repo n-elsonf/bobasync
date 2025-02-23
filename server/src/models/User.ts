@@ -1,7 +1,7 @@
 // src/models/User.ts
-import mongoose, { Schema } from "mongoose";
+import mongoose, { ObjectId, Schema} from "mongoose";
 import bcrypt from "bcryptjs";
-import { IUser, IUserMethods, IUserModel } from "./types";
+import { IUser, IUserMethods, IUserModel, PublicUser } from "./types";
 
 const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   {
@@ -61,6 +61,32 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
       type: Date,
       default: null,
     },
+    friends: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    
+    friendRequests: [{
+      from: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      status: {
+        type: String,
+        enum: ['pending', 'accepted', 'rejected'],
+        default: 'pending'
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+
+    blockedUsers: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      sparse: true
+    }]
   },
   {
     timestamps: true, // Automatically manage createdAt and updatedAt
@@ -69,6 +95,22 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   }
 );
 
+// userSchema.post('find', function(docs) {
+//   // Handle both single doc and array of docs
+//   const documents = Array.isArray(docs) ? docs : [docs];
+  
+//   documents.forEach(doc => {
+//     if (doc && doc.friendRequests) {
+//       // Initialize maps
+//       doc.friendRequestsWithRequestId = new Map(
+//         doc.friendRequests.map(request => [request._id, request])
+//       );
+//       doc.friendRequestsWithSenderId = new Map(
+//         doc.friendRequests.map(request => [request.from, request])
+//       );
+//     }
+//   });
+// });
 // Pre-save middleware to hash password
 userSchema.pre("save", async function (next) {
   // Only hash password if it has been modified
@@ -95,18 +137,102 @@ userSchema.methods.comparePassword = async function (
 };
 
 // Method to get public profile (exclude sensitive data)
-userSchema.methods.getPublicProfile = function (): Partial<IUser> {
+userSchema.methods.getPublicProfile = function (): PublicUser {
   const userObject = this.toObject();
+  // Remove sensitive fields
   const {
     password,
     verificationToken,
     resetPasswordToken,
     resetPasswordExpire,
+    blockedUsers,
     ...publicData
   } = userObject;
 
   return publicData;
 };
+
+// Add friend-related methods
+userSchema.methods.sendFriendRequest = async function(friendId: string | ObjectId) {
+  const friendObjectId = typeof friendId === 'string' ? new Schema.Types.ObjectId(friendId) : friendId;
+  // Check if already friends
+  if (this.friends.includes(friendObjectId)) {
+    throw new Error('Already friends with this user');
+  }
+
+  // Check if blocked
+  if (this.blockedUsers.includes(friendObjectId) || 
+      (await User.findById(friendId))?.blockedUsers.includes(this._id)) {
+    throw new Error('Unable to send friend request');
+  }
+
+  // Check for existing requests
+  const targetUser = await User.findById(friendId);
+  if (!targetUser) {
+    throw new Error('User not found');
+  }
+
+  const existingRequest = targetUser.friendRequestsWithSenderId.get(this._id);
+  if (existingRequest) {
+    throw new Error('Friend request already sent');
+  }
+
+  // Send friend request
+  await User.findByIdAndUpdate(friendId, {
+    $push: {
+      friendRequests: {
+        from: this._id,
+        status: 'pending'
+      }
+    }
+  });
+};
+
+userSchema.methods.acceptFriendRequest = async function(requestId: string | ObjectId) {
+  const requestObjectId = typeof requestId === 'string' ? new Schema.Types.ObjectId(requestId) : requestId;
+  const request = this.friendRequestsWithRequestId.get(requestObjectId);
+  if (!request || request.status !== 'pending') {
+    throw new Error('Invalid friend request');
+  }
+
+  // Update request status
+  request.status = 'accepted';
+  
+  // Add to friends list for both users
+  this.friends.push(request.from);
+  await User.findByIdAndUpdate(request.from, {
+    $push: { friends: this._id }
+  });
+
+  await this.save();
+};
+
+userSchema.methods.rejectFriendRequest = async function(requestId: string | ObjectId) {
+  const requestObjectId = typeof requestId === 'string' ? new Schema.Types.ObjectId(requestId) : requestId;
+  const request = this.friendRequestsWithRequestId.get(requestObjectId);
+  if (!request || request.status !== 'pending') {
+    throw new Error('Invalid friend request');
+  }
+
+  request.status = 'rejected';
+  await this.save();
+};
+
+userSchema.methods.removeFriend = async function(friendId: string | ObjectId) {
+  const friendObjectId = typeof friendId === 'string' ? new Schema.Types.ObjectId(friendId) : friendId;
+  if (!this.friends.includes(friendObjectId)) {
+    throw new Error('User is not a friend');
+  }
+
+  // Remove from both users' friend lists
+  this.friends = this.friends.filter(id => id.toString() !== friendId.toString());
+  await User.findByIdAndUpdate(friendId, {
+    $pull: { friends: this._id }
+  });
+
+  await this.save();
+};
+
 
 // Static method to find user by email
 userSchema.static("findByEmail", async function findByEmail(email: string) {
@@ -122,33 +248,3 @@ userSchema.virtual("fullName").get(function (this: IUser) {
 const User = mongoose.model<IUser, IUserModel>("User", userSchema);
 
 export default User;
-
-// Example usage:
-/*
-import User from './models/User';
-
-// Create new user
-const createUser = async () => {
-  try {
-    const user = await User.create({
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'password123'
-    });
-    return user.getPublicProfile();
-  } catch (error) {
-    throw error;
-  }
-};
-
-// Find user by email
-const findUser = async (email: string) => {
-  const user = await User.findByEmail(email);
-  return user?.getPublicProfile();
-};
-
-// Compare password
-const validatePassword = async (user: IUser & Document, password: string) => {
-  return await user.comparePassword(password);
-};
-*/
