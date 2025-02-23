@@ -6,8 +6,26 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import axios from "axios";
 import moment from "moment";
 
+
+interface CalendarEvent {
+  id: string;
+  summary: string;
+  start: {
+    dateTime?: string;
+    date?: string;
+    timeZone?: string;
+  };
+  end: {
+    dateTime?: string;
+    date?: string;
+    timeZone?: string;
+  };
+  description?: string;
+}
+
+
 export default function InfiniteScrollCalendar() {
-  const [events, setEvents] = useState({});
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDay, setSelectedDay] = useState(moment().format("YYYY-MM-DD"));
   const [loading, setLoading] = useState(false);
   const [accessToken, setAccessToken] = useState("");
@@ -32,49 +50,54 @@ export default function InfiniteScrollCalendar() {
     }
   };
 
-  // Fetch events for the given date range
-  const fetchEvents = async (start, end) => {
-    setLoading(true);
+  const [eventsByDate, setEventsByDate] = useState<Record<string, CalendarEvent[]>>({});
+
+  // In your fetchAllEvents function, modify how events are stored:
+  const fetchAllEvents = async (calendarId = "primary", pageToken = null) => {
     try {
-      const response = await axios.get(
-        `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${start}&timeMax=${end}&singleEvents=true&orderBy=startTime`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
+      let url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?singleEvents=true&orderBy=startTime`;
+      if (pageToken) {
+        url += `&pageToken=${pageToken}`;
+      }
 
-      const formattedEvents = { ...events };
-
-      // Organize events by date
-      response.data.items.forEach((event) => {
-        const startTime = moment(event.start?.dateTime || event.start?.date);
-        const day = startTime.format("YYYY-MM-DD");
-
-        if (!formattedEvents[day]) {
-          formattedEvents[day] = [];
-        }
-
-        formattedEvents[day].push({
-          title: event.summary || "No Title",
-          start: startTime.format("HH:mm"),
-          end: moment(event.end?.dateTime || event.end?.date).format("HH:mm"),
-        });
+      const response = await axios.get<{ items: CalendarEvent[]; nextPageToken?: string }>(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
 
-      setEvents(formattedEvents);
+      const newEvents = response.data.items || [];
+
+      // Organize events by date
+      setEventsByDate(prevEvents => {
+        const updatedEvents = { ...prevEvents };
+
+        newEvents.forEach(event => {
+          // Get the date from either dateTime or date field
+          const eventDate = event.start.dateTime
+            ? moment(event.start.dateTime).format('YYYY-MM-DD')
+            : event.start.date;
+
+          if (eventDate) {
+            if (!updatedEvents[eventDate]) {
+              updatedEvents[eventDate] = [];
+            }
+            updatedEvents[eventDate].push(event);
+          }
+        });
+
+        return updatedEvents;
+      });
+
+      if (response.data.nextPageToken) {
+        await fetchAllEvents(calendarId, response.data.nextPageToken);
+      }
     } catch (error) {
       console.error("Error fetching events:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  // Load initial events
   useEffect(() => {
     if (accessToken) {
-      const startOfWeek = moment().startOf("week").toISOString();
-      const endOfWeek = moment().endOf("week").toISOString();
-      fetchEvents(startOfWeek, endOfWeek);
+      fetchAllEvents();  // ✅ Fetch events after token is set
     }
   }, [accessToken]);
 
@@ -87,10 +110,9 @@ export default function InfiniteScrollCalendar() {
     return days;
   };
 
-  // Render day button
-  const renderDay = ({ item }) => {
+  const renderDay = ({ item }: { item: string }) => {
     const isSelected = item === selectedDay;
-    const hasEvents = events[item]?.length > 0;
+    const hasEvents = eventsByDate[item]?.length > 0;
 
     return (
       <TouchableOpacity
@@ -108,20 +130,25 @@ export default function InfiniteScrollCalendar() {
     );
   };
 
-  // Render events for the selected day
+
+
   const renderEventsForSelectedDay = () => {
-    const dayEvents = events[selectedDay] || [];
+    const dayEvents = eventsByDate[selectedDay] || [];
 
     return (
       <View style={styles.eventsContainer}>
-        <Text style={styles.eventsHeader}>Events for {moment(selectedDay).format("dddd, MMM D")}</Text>
+        <Text style={styles.eventsHeader}>
+          Events for {moment(selectedDay).format("dddd, MMM D")}
+        </Text>
 
         {dayEvents.length > 0 ? (
           dayEvents.map((event, index) => (
-            <View key={index} style={styles.eventCard}>
-              <Text style={styles.eventTitle}>{event.title}</Text>
+            <View key={event.id || index} style={styles.eventCard}>
+              <Text style={styles.eventTitle}>{event.summary}</Text>
               <Text style={styles.eventTime}>
-                {event.start} - {event.end}
+                {event.start.dateTime
+                  ? `${moment(event.start.dateTime).format('h:mm A')} - ${moment(event.end.dateTime).format('h:mm A')}`
+                  : 'All day'}
               </Text>
             </View>
           ))
@@ -131,6 +158,8 @@ export default function InfiniteScrollCalendar() {
       </View>
     );
   };
+
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -256,5 +285,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     textAlign: "center",
     width: 200,
+  },
+  eventDescription: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
   },
 });
