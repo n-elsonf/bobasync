@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.test' });
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { beforeAll, afterAll, jest } from '@jest/globals';
+// import { beforeAll, afterAll, jest } from '@jest/globals';
 
 let mongoServer: MongoMemoryServer;
 
@@ -23,7 +23,7 @@ beforeAll(async () => {
   // Set up any test environment variables needed for auth
   process.env.JWT_SECRET = 'f23505b4f271f2d3ddcaf0ffd2dcdfb074f29cecf248c914c3e0b5c6a0a9cedc43f92c526386a075e903a5db6fcab1a6ed9fbb23bf42af9353b31c6001099bed';
   process.env.JWT_EXPIRES_IN = '1h';
-  process.env.GOOGLE_CLIENT_ID = 'test-google-client-id';
+  // process.env.GOOGLE_CLIENT_ID = 'test-google-client-id';
 });
 
 afterAll(async () => {
@@ -37,5 +37,5 @@ afterAll(async () => {
   // Reset environment variables
   process.env.JWT_SECRET = undefined;
   process.env.JWT_EXPIRES_IN = undefined;
-  process.env.GOOGLE_CLIENT_ID = undefined;
+  // process.env.GOOGLE_CLIENT_ID = undefined;
 });

@@ -9,39 +9,56 @@ type ControllerFn = (
   next: NextFunction
 ) => Promise<void>;
 
-interface AuthResponse {
-  success: boolean;
-  message?: string;
-  data?: any;
-  errors?: string[];
-}
+// interface AuthResponse {
+//   success: boolean;
+//   message?: string;
+//   data?: any;
+//   errors?: string[];
+// }
 
 // Extend Express Request to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        email: string;
-      };
-    }
-  }
-}
+// declare global {
+//   namespace Express {
+//     interface Request {
+//       user?: {
+//         id: string;
+//         email: string;
+//       };
+//     }
+//   }
+// }
+// Create mock controller
 
 import { AuthController } from '../src/controller/auth.controller';
 import authRoutes from '../src/routes/auth.routes';
-import { protect } from '../src/middleware/auth.middleware';
+// import { protect } from '../src/middleware/auth.middleware';
 import { validateRequest } from '../src/middleware/validation.middleware';
 
 // Mock the entire auth controller module
-jest.mock('../controllers/auth.controller', () => ({
-  register: jest.fn() as jest.MockedFunction<ControllerFn>,
-  login: jest.fn() as jest.MockedFunction<ControllerFn>
+// jest.mock('../src/controller/auth.controller', () => ({
+//   // AuthController: {
+//   //   // register: jest.fn() as jest.MockedFunction<ControllerFn>,
+//   //   // login: jest.fn() as jest.MockedFunction<ControllerFn>,
+//   // }
+// }));
+// Mock the validation schema
+jest.mock('../src/validations/auth.validation', () => ({
+  authValidation: {
+    register: jest.fn()
+  }
+}));
+
+// Mock the auth controller
+jest.mock('../src/controller/auth.controller');
+
+// Mock the validation middleware
+jest.mock('../src/middleware/validation.middleware', () => ({
+  validateRequest: jest.fn(() => (_req: Request, _res: Response, next: NextFunction) => next())
 }));
 // Mock the auth controller and middleware
 // jest.mock('../controller/auth.controller');
-jest.mock('../middleware/auth.middleware');
-jest.mock('../middleware/validation.middleware');
+// jest.mock('../middleware/auth.middleware');
+// jest.mock('../middleware/validation.middleware');
 
 describe('Auth Routes', () => {
   let app: express.Application;
@@ -56,7 +73,7 @@ describe('Auth Routes', () => {
     app.use('/auth', authRoutes);
 
     // Mock validateRequest to pass through
-    (validateRequest as jest.Mock).mockImplementation(() => (req: Request, res: Response, next: NextFunction) => next());
+    (validateRequest as jest.Mock).mockImplementation(() => ( next: NextFunction) => next());
   });
 
   describe('POST /auth/register', () => {
@@ -67,16 +84,16 @@ describe('Auth Routes', () => {
     };
 
     it('should successfully register a new user', async () => {
-
-     // Cast the mock with proper typing
-    const mockRegister = AuthController.register as jest.MockedFunction<ControllerFn>;
-    
-    mockRegister.mockImplementation(async (req: Request, res: Response, next: NextFunction) => {
-      res.status(201).json({
-        success: true,
-        message: 'User registered successfully',
-        data: { ...validRegisterData, password: undefined }
-      });
+     // Mock the static register method
+     (AuthController.register as jest.MockedFunction<ControllerFn>).mockImplementation(async (_: Request, res: Response) => {
+        res.status(201).json({
+          success: true,
+          message: 'User registered successfully',
+          data: { 
+            ...validRegisterData, 
+            password: undefined 
+          }
+        });
     });
       const response = await request(app)
         .post('/auth/register')
@@ -332,5 +349,4 @@ describe('Auth Routes', () => {
   //     expect(response.body.success).toBe(false);
   //     expect(AuthController.getCurrentUser).not.toHaveBeenCalled();
   //   });
-  });
 });

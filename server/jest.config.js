@@ -6,8 +6,7 @@ module.exports = {
   moduleDirectories: ['node_modules', 'src'],
   roots: ['<rootDir>'],
   testMatch: [
-    '**/__tests__/**/*.ts?(x)',
-    '**/?(*.)+(spec|test).ts?(x)'
+    '<rootDir>/test/**/*.test.ts'
   ],
   transform: {
     '^.+\\.(ts|tsx)$': [
@@ -18,7 +17,7 @@ module.exports = {
     ]
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  setupFiles: ['<rootDir>/test/setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
