@@ -5,6 +5,7 @@ import { GOOGLE_IOS_ID, GOOGLE_WEB_ID } from "@env";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import axios from "axios";
 import moment from "moment";
+import { useAuth } from "../context/AuthContext";
 
 
 interface CalendarEvent {
@@ -25,30 +26,31 @@ interface CalendarEvent {
 
 
 export default function InfiniteScrollCalendar() {
+  const { accessToken } = useAuth();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDay, setSelectedDay] = useState(moment().format("YYYY-MM-DD"));
   const [loading, setLoading] = useState(false);
-  const [accessToken, setAccessToken] = useState("");
 
-  // Configure Google Sign-In
-  GoogleSignin.configure({
-    webClientId: GOOGLE_WEB_ID,
-    iosClientId: GOOGLE_IOS_ID,
-    scopes: ["https://www.googleapis.com/auth/calendar.readonly", "email", "profile"],
-    offlineAccess: true,
-  });
 
-  // Sign in with Google
-  const signInWithGoogle = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      await GoogleSignin.signIn();
-      const tokens = await GoogleSignin.getTokens();
-      setAccessToken(tokens.accessToken);
-    } catch (error) {
-      console.error("Google sign-in error:", error);
-    }
-  };
+  // // Configure Google Sign-In
+  // GoogleSignin.configure({
+  //   webClientId: GOOGLE_WEB_ID,
+  //   iosClientId: GOOGLE_IOS_ID,
+  //   scopes: ["https://www.googleapis.com/auth/calendar.readonly", "email", "profile"],
+  //   offlineAccess: true,
+  // });
+
+  // // Sign in with Google
+  // const signInWithGoogle = async () => {
+  //   try {
+  //     await GoogleSignin.hasPlayServices();
+  //     await GoogleSignin.signIn();
+  //     const tokens = await GoogleSignin.getTokens();
+  //     setAccessToken(tokens.accessToken);
+  //   } catch (error) {
+  //     console.error("Google sign-in error:", error);
+  //   }
+  // };
 
   const [eventsByDate, setEventsByDate] = useState<Record<string, CalendarEvent[]>>({});
 
@@ -130,8 +132,6 @@ export default function InfiniteScrollCalendar() {
     );
   };
 
-
-
   const renderEventsForSelectedDay = () => {
     const dayEvents = eventsByDate[selectedDay] || [];
 
@@ -159,22 +159,12 @@ export default function InfiniteScrollCalendar() {
     );
   };
 
-
-
   return (
     <SafeAreaView style={styles.container}>
-      {!accessToken ? (
-        <View>
-          <Text style={styles.signInText}>Sign in to view your calendar:</Text>
-          <Text onPress={signInWithGoogle} style={styles.signInButton}>
-            Sign in with Google
-          </Text>
-        </View>
-      ) : loading ? (
+      {loading ? (
         <ActivityIndicator size="large" style={{ marginTop: 20 }} />
       ) : (
         <>
-          {/* Infinite Scrollable Days */}
           <FlatList
             horizontal
             data={generateDays()}
@@ -183,8 +173,6 @@ export default function InfiniteScrollCalendar() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.weekDaysContainer}
           />
-
-          {/* Event List for Selected Day */}
           {renderEventsForSelectedDay()}
         </>
       )}

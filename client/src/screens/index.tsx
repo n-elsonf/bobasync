@@ -56,6 +56,7 @@ export default function Index() {
 
       await AsyncStorage.setItem("authToken", idToken);
       Alert.alert("Success", `Welcome ${user.name}!`);
+      router.push('/home');
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
       Alert.alert(

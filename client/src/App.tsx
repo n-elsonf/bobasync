@@ -5,6 +5,7 @@ import '../global.css'
 import Login from "./screens/login";
 import { ExpoRoot } from "expo-router";
 import { AuthProvider } from './context/AuthContext';
+import InfiniteScrollCalendar from "./screens/events";
 
 
 
@@ -18,6 +19,7 @@ export default function App() {
     // 
     <AuthProvider>
       <ExpoRoot context={require.context('./screens')} />
+      {/* <InfiniteScrollCalendar /> */}
     </AuthProvider>
 
   )
