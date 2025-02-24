@@ -21,7 +21,7 @@ beforeAll(async () => {
   await mongoose.connect(mongoUri);
 
   // Set up any test environment variables needed for auth
-  process.env.JWT_SECRET = 'test-jwt-secret';
+  process.env.JWT_SECRET = 'f23505b4f271f2d3ddcaf0ffd2dcdfb074f29cecf248c914c3e0b5c6a0a9cedc43f92c526386a075e903a5db6fcab1a6ed9fbb23bf42af9353b31c6001099bed';
   process.env.JWT_EXPIRES_IN = '1h';
   process.env.GOOGLE_CLIENT_ID = 'test-google-client-id';
 });
