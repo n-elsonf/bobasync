@@ -1,42 +1,45 @@
 import { Text, TouchableOpacity, View, Image, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 import images from '../constants/images';
 import React, { useEffect } from "react";
-import * as AuthSession from "expo-auth-session";
-import { GOOGLE_IOS_ID } from "@env"
+import { GOOGLE_IOS_ID, GOOGLE_WEB_ID } from "@env"
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../utils/api";
-
-
-WebBrowser.maybeCompleteAuthSession();
+import { useAuth } from "../context/AuthContext";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 export default function Index() {
   const router = useRouter();
   const handleLogin = () => router.push('/login');
   const handleRegister = () => router.push('/register');
 
+  const { setAccessToken } = useAuth();
+
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: GOOGLE_IOS_ID,
     scopes: ["profile", "email"],
   });
 
-  const handleToken = () => {
-    if (response?.type === "success") {
-      const { authentication } = response;
-      const token: string | undefined = authentication?.idToken;
+  GoogleSignin.configure({
+    webClientId: GOOGLE_WEB_ID,
+    iosClientId: GOOGLE_IOS_ID,
+    offlineAccess: true,
+  });
 
-      if (!token) {
-        console.error("Error: idToken is missing.");
-        return;
-      }
-
-      console.log("Token extracted:", token);
-      sendTokenToBackend(token); // Now guaranteed to be a string
+  // Sign in with Google
+  const signInWithGoogle = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      await GoogleSignin.signIn();
+      const tokens = await GoogleSignin.getTokens();
+      setAccessToken(tokens.accessToken);
+      sendTokenToBackend(tokens.idToken);
+    } catch (error) {
+      console.error("Google sign-in error:", error);
     }
-  }
+  };
 
   const sendTokenToBackend = async (token: string) => {
     try {
@@ -62,10 +65,6 @@ export default function Index() {
     }
   };
 
-
-  useEffect(() => {
-    handleToken();
-  }, [response]);
   return (
     <SafeAreaView className="bg-white h-full border-solid">
       <Image source={images.logo} className="w-full h-4/6 bg-white" resizeMode="contain" />
@@ -89,7 +88,7 @@ export default function Index() {
 
         {/* Google Sign-In Button */}
         <TouchableOpacity
-          onPress={() => promptAsync()}
+          onPress={signInWithGoogle}
           className="mt-6 top-20 bg-white shadow-md shadow-zinc-300 rounded-full w-3/4 py-4 flex flex-row items-center justify-center"
         >
           <Image
