@@ -8,7 +8,7 @@ import { GOOGLE_IOS_ID, GOOGLE_WEB_ID } from "@env"
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 
 export default function Index() {
   const router = useRouter();
@@ -17,11 +17,6 @@ export default function Index() {
 
 
   const { setAccessToken } = useAuth();
-
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    iosClientId: GOOGLE_IOS_ID,
-    scopes: ["profile", "email"],
-  });
 
   GoogleSignin.configure({
     webClientId: GOOGLE_WEB_ID,
@@ -33,12 +28,29 @@ export default function Index() {
   const signInWithGoogle = async () => {
     try {
       await GoogleSignin.hasPlayServices();
-      await GoogleSignin.signIn();
+      const userInfo = await GoogleSignin.signIn();
+
+      // If we get here, it means the user successfully completed the sign-in
+      // Only then proceed to get tokens and send to backend
       const tokens = await GoogleSignin.getTokens();
       setAccessToken(tokens.accessToken);
       sendTokenToBackend(tokens.idToken);
-    } catch (error) {
-      console.error("Google sign-in error:", error);
+    } catch (error: any) {
+      // Check for specific error types
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        console.log("User cancelled the sign-in flow");
+        // Don't proceed further - explicit early return
+        return;
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        console.log("Another sign-in operation is in progress");
+        return;
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert("Error", "Play services not available or outdated");
+        return;
+      } else {
+        console.error("Google sign-in error:", error);
+        Alert.alert("Sign-In Error", "Failed to sign in with Google");
+      }
     }
   };
 
@@ -71,8 +83,8 @@ export default function Index() {
     <SafeAreaView className="bg-white h-full border-solid">
       <Image source={images.logo} className="w-full h-4/6 bg-white" resizeMode="contain" />
       <View className="top-[-90] items-center flex-1 px-10">
-        <Text className="text-5xl text-center uppercase font-extrabold">BobaSync</Text>
-        <Text className="text2xl font-bold text-center">A scheduling app for all your boba meets.</Text>
+        <Text className="text-5xl text-center uppercase font-extrabold">TSync</Text>
+        <Text className="text-1xl font-bold text-center">A scheduling app for all your coffee chats.</Text>
 
         {/* Sign in with Email */}
         <TouchableOpacity onPress={handleLogin} className='top-20 bg-white shadow-md shadow-zinc-300 rounded-full w-3/4 py-4'>
