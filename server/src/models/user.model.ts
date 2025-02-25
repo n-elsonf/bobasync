@@ -167,6 +167,10 @@ userSchema.methods.getPublicProfile = function (): PublicUser {
 
 // Add friend-related methods
 userSchema.methods.sendFriendRequest = async function(friendId: string) {
+  if (this._id.toString() === friendId) {
+    throw new Error('Cannot send friend request to self');
+  }
+
   // Check if already friends
   if (this.friends.some((id: Types.ObjectId) => id.toString() === friendId)) {
     throw new Error('Already friends with this user');
@@ -201,7 +205,6 @@ userSchema.methods.sendFriendRequest = async function(friendId: string) {
 };
 
 userSchema.methods.acceptFriendRequest = async function(requestId: string) {
-  console.log(this.friendRequestsWithRequestId)
   const request = this.friendRequestsWithRequestId.get(requestId);
   if (!request || request.status !== 'pending') {
     throw new Error('Invalid friend request');
