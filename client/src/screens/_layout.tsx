@@ -1,7 +1,4 @@
 import { Stack } from "expo-router";
-import Login from "./login";
-import Home from "./home";
-import RegisterScreen from "./register";
 
 export default function RootLayout() {
   return <Stack screenOptions={{ headerShown: false, gestureEnabled: false }}>
@@ -9,6 +6,7 @@ export default function RootLayout() {
     <Stack.Screen name="register" options={{ title: 'Register' }} />
     <Stack.Screen name="login" options={{ title: 'Sign in' }} />
     <Stack.Screen name="home" options={{ title: 'Home' }} />
+    <Stack.Screen name="events" options={{ gestureEnabled: true }} />
   </Stack>;
   // return <RegisterScreen />;
 }

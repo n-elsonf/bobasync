@@ -4,10 +4,9 @@ import { AppRegistry, SafeAreaView, Text, View } from "react-native";
 import '../global.css'
 import Login from "./screens/login";
 import { ExpoRoot } from "expo-router";
-import Index from "./app/index";
-import { registerRootComponent } from 'expo';
-import Schedule from "./screens/calendar";
-import Events from "./screens/events";
+import { AuthProvider } from './context/AuthContext';
+import InfiniteScrollCalendar from "./screens/events";
+
 
 
 const Stack = createNativeStackNavigator();
@@ -16,8 +15,13 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
     // <Login />
-    // <Events />
-    <ExpoRoot context={require.context('./screens')} />
+    // <Events /
+    // 
+    <AuthProvider>
+      <ExpoRoot context={require.context('./screens')} />
+      {/* <InfiniteScrollCalendar /> */}
+    </AuthProvider>
+
   )
 }
 
