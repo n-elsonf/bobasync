@@ -27,9 +27,9 @@ export interface IUser extends Document {
 
   // fields not included in schema
   // Map from requestId to friend request
-  friendRequestsWithRequestId: Map<Types.ObjectId, IFriendRequest>;
+  friendRequestsWithRequestId: Map<string, IFriendRequest>;
   // Map from senderId to friend request
-  friendRequestsWithSenderId: Map<Types.ObjectId, IFriendRequest>;
+  friendRequestsWithSenderId: Map<string, IFriendRequest>;
 
 }
 

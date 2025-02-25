@@ -4,8 +4,8 @@ import {Document} from 'mongoose';
 
 // Import your User model and interfaces
 // Note: Adjust the import path based on your project structure
-import User from '../src/models/user';
-import { IUser, IUserMethods } from '../src/types/user';
+import User from '../../src/models/user.model';
+import { IUser, IUserMethods } from '../../src/types/user';
 
 
 describe('User Model Tests', () => {
