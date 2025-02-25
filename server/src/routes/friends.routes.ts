@@ -1,5 +1,5 @@
 import express from "express";
-import { FriendController } from "../controller/friends.controller";
+import { FriendController } from "../controllers/friends.controller";
 import { protect } from "../middleware/auth.middleware";
 import { validateRequest } from "../middleware/validation.middleware";
 import { friendValidation } from "../validations/friends.validation";

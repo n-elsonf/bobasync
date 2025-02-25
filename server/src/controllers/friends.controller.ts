@@ -62,7 +62,7 @@ export class FriendController {
   static async acceptRequest(req: Request, res: Response) {
     const { requestId } = req.params;
     const user = await User.findById(req.user!._id);
-    const request = user!.friendRequestsWithRequestId.get(new Types.ObjectId(requestId));
+    const request = user!.friendRequestsWithRequestId.get(requestId);
 
     // Update request status
     request!.status = 'accepted';
@@ -89,7 +89,7 @@ export class FriendController {
   static async rejectRequest(req: Request, res: Response) {
     const { requestId } = req.params;
     const user = await User.findById(req.user!._id);
-    const request = user!.friendRequestsWithRequestId.get(new Types.ObjectId(requestId));
+    const request = user!.friendRequestsWithRequestId.get(requestId);
 
     request!.status = 'rejected';
     await user!.save();
