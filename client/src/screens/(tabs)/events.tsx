@@ -24,6 +24,7 @@ interface CalendarEvent {
 
 
 export default function Events() {
+
   const { accessToken } = useAuth();
   const [selectedDay, setSelectedDay] = useState(moment().format("YYYY-MM-DD"));
   const [loading, setLoading] = useState(false);
@@ -31,7 +32,7 @@ export default function Events() {
   const [eventsByDate, setEventsByDate] = useState<Record<string, CalendarEvent[]>>({});
 
   // In your fetchAllEvents function, modify how events are stored:
-  const fetchAllEvents = async (calendarId = "primary", pageToken = null) => {
+  const fetchAllEvents = async (calendarId = "primary", pageToken: string | null = null) => {
     try {
       let url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?singleEvents=true&orderBy=startTime`;
       if (pageToken) {
@@ -65,8 +66,10 @@ export default function Events() {
         return updatedEvents;
       });
 
-      if (response.data.nextPageToken) {
-        await fetchAllEvents(calendarId, response.data.nextPageToken);
+      const nextPageToken: string | undefined = response.data.nextPageToken;
+
+      if (typeof nextPageToken === "string") {
+        await fetchAllEvents(calendarId, nextPageToken);
       }
     } catch (error) {
       console.error("Error fetching events:", error);

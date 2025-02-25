@@ -1,13 +1,13 @@
 import React from 'react';
 import { Tabs } from "expo-router";
-import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { View, TouchableOpacity, StyleSheet, GestureResponderEvent } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
 
-  const CustomTabBarButton = ({ children, onPress }) => (
+  const CustomTabBarButton = ({ children, onPress }: { children: React.ReactNode; onPress?: (event: GestureResponderEvent) => void }) => (
     <TouchableOpacity
       style={{
         top: -20,
@@ -35,8 +35,6 @@ export default function TabsLayout() {
         tabBarShowLabel: false,
         tabBarStyle: {
           position: 'absolute',
-          // bottom: insets.bottom,
-          elevation: 0,
           backgroundColor: '#ffffff',
           borderTopWidth: 0,
           height: 60 + (insets.bottom > 0 ? insets.bottom - 5 : 0),

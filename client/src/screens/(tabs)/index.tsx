@@ -5,8 +5,16 @@ import * as Location from 'expo-location';
 import axios from 'axios';
 import { GOOGLE_PLACES_API } from '@env';
 
+type Place = {
+  place_id: string;
+  name: string;
+  vicinity: string;
+  rating?: number;
+  photos?: { photo_reference: string }[];
+};
+
 export default function Index() {
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +32,7 @@ export default function Index() {
     return location.coords;
   };
 
-  const getNearbyStores = async (latitude, longitude) => {
+  const getNearbyStores = async (latitude: number, longitude: number) => {
     setLoading(true);
     const radius = 5000;
     const type = 'cafe';
@@ -65,7 +73,7 @@ export default function Index() {
         </View>
       ) : (
         <FlatList
-          data={shops}
+          data={shops as Place[]}
           keyExtractor={(item) => item.place_id}
           renderItem={({ item }) => {
             const photoRef = item.photos?.[0]?.photo_reference;
