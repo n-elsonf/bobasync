@@ -2,12 +2,22 @@
 import dotenv from 'dotenv';
 
 // Load environment variables
-dotenv.config({ path: '.env.test' });
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-// import { beforeAll, afterAll, jest } from '@jest/globals';
+import { Request, Response, NextFunction } from 'express';
+import { beforeAll, afterAll, jest } from '@jest/globals';
 
 let mongoServer: MongoMemoryServer;
+
+jest.mock('../src/controller/auth.controller');
+jest.mock('../src/middleware/validation.middleware', () => ({
+  validateRequest: jest.fn(() => (_req: Request, _res: Response, next: NextFunction) => next())
+}));
+// jest.mock('../src/validations/auth.validation', () => ({
+//   authValidation: {
+//     register: jest.fn()
+//   }
+// }));
 
 beforeAll(async () => {
   // Load test environment variables
@@ -37,5 +47,10 @@ afterAll(async () => {
   // Reset environment variables
   process.env.JWT_SECRET = undefined;
   process.env.JWT_EXPIRES_IN = undefined;
+  console.log('✅ Tests completed, MongoDB connection closed.');
   // process.env.GOOGLE_CLIENT_ID = undefined;
 });
+
+afterEach(() => {
+  jest.restoreAllMocks()
+})

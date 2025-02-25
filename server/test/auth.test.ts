@@ -32,33 +32,14 @@ type ControllerFn = (
 import { AuthController } from '../src/controller/auth.controller';
 import authRoutes from '../src/routes/auth.routes';
 // import { protect } from '../src/middleware/auth.middleware';
-import { validateRequest } from '../src/middleware/validation.middleware';
 
-// Mock the entire auth controller module
-// jest.mock('../src/controller/auth.controller', () => ({
-//   // AuthController: {
-//   //   // register: jest.fn() as jest.MockedFunction<ControllerFn>,
-//   //   // login: jest.fn() as jest.MockedFunction<ControllerFn>,
-//   // }
-// }));
 // Mock the validation schema
-jest.mock('../src/validations/auth.validation', () => ({
-  authValidation: {
-    register: jest.fn()
-  }
-}));
-
-// Mock the auth controller
-jest.mock('../src/controller/auth.controller');
-
-// Mock the validation middleware
-jest.mock('../src/middleware/validation.middleware', () => ({
-  validateRequest: jest.fn(() => (_req: Request, _res: Response, next: NextFunction) => next())
-}));
 // Mock the auth controller and middleware
-// jest.mock('../controller/auth.controller');
-// jest.mock('../middleware/auth.middleware');
-// jest.mock('../middleware/validation.middleware');
+// jest.mock('mongoose');
+jest.mock('../src/models/user');
+jest.mock('../src/services/auth.service');
+
+
 
 describe('Auth Routes', () => {
   let app: express.Application;
@@ -71,9 +52,6 @@ describe('Auth Routes', () => {
     app = express();
     app.use(express.json());
     app.use('/auth', authRoutes);
-
-    // Mock validateRequest to pass through
-    (validateRequest as jest.Mock).mockImplementation(() => ( next: NextFunction) => next());
   });
 
   describe('POST /auth/register', () => {
@@ -85,9 +63,9 @@ describe('Auth Routes', () => {
 
     it('should successfully register a new user', async () => {
      // Mock the static register method
-     (AuthController.register as jest.MockedFunction<ControllerFn>).mockImplementation(async (_: Request, res: Response) => {
+     (AuthController.register as jest.MockedFunction<ControllerFn>).mockImplementation(async (_req: Request, res: Response, _next: NextFunction) => {
         res.status(201).json({
-          success: true,
+          success: true, 
           message: 'User registered successfully',
           data: { 
             ...validRegisterData, 
