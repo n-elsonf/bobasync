@@ -12,8 +12,9 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 export default function Index() {
   const router = useRouter();
-  const handleLogin = () => router.push('/login');
-  const handleRegister = () => router.push('/register');
+  const handleLogin = () => router.push("./login");
+  const handleRegister = () => router.push("./register");
+
 
   const { setAccessToken } = useAuth();
 
@@ -56,7 +57,7 @@ export default function Index() {
 
       await AsyncStorage.setItem("authToken", idToken);
       Alert.alert("Success", `Welcome ${user.name}!`);
-      router.push('/home');
+      router.push('./home');
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
       Alert.alert(
