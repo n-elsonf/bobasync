@@ -3,7 +3,7 @@ import { Text, View, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, 
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 import moment from "moment";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 
 interface CalendarEvent {
@@ -23,32 +23,10 @@ interface CalendarEvent {
 }
 
 
-export default function InfiniteScrollCalendar() {
+export default function Events() {
   const { accessToken } = useAuth();
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDay, setSelectedDay] = useState(moment().format("YYYY-MM-DD"));
   const [loading, setLoading] = useState(false);
-
-
-  // // Configure Google Sign-In
-  // GoogleSignin.configure({
-  //   webClientId: GOOGLE_WEB_ID,
-  //   iosClientId: GOOGLE_IOS_ID,
-  //   scopes: ["https://www.googleapis.com/auth/calendar.readonly", "email", "profile"],
-  //   offlineAccess: true,
-  // });
-
-  // // Sign in with Google
-  // const signInWithGoogle = async () => {
-  //   try {
-  //     await GoogleSignin.hasPlayServices();
-  //     await GoogleSignin.signIn();
-  //     const tokens = await GoogleSignin.getTokens();
-  //     setAccessToken(tokens.accessToken);
-  //   } catch (error) {
-  //     console.error("Google sign-in error:", error);
-  //   }
-  // };
 
   const [eventsByDate, setEventsByDate] = useState<Record<string, CalendarEvent[]>>({});
 

@@ -5,7 +5,7 @@ import '../global.css'
 import Login from "./screens/login";
 import { ExpoRoot } from "expo-router";
 import { AuthProvider } from './context/AuthContext';
-import InfiniteScrollCalendar from "./screens/events";
+import InfiniteScrollCalendar from "./screens/(tabs)/events";
 
 
 
@@ -14,9 +14,6 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    // <Login />
-    // <Events /
-    // 
     <AuthProvider>
       <ExpoRoot context={require.context('./screens')} />
       {/* <InfiniteScrollCalendar /> */}

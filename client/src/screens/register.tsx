@@ -1,10 +1,7 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, Alert, Text, TouchableOpacity } from "react-native";
 import { api } from "../utils/api"; // Import Axios instance
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
-
-import { useRouter } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
 
 const RegisterScreen = () => {

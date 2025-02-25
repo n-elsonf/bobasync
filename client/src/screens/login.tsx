@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Keyboard, Button } from 'react-native';
+import { Text, TextInput, TouchableOpacity, Alert, StyleSheet, Keyboard, Button } from 'react-native';
 import { api } from "../utils/api"; // Import the API instance
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from 'expo-router';
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
-import images from '../constants/images'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import '../../global.css';
 import { ArrowLeft } from "lucide-react-native";

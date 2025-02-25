@@ -3,7 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as Google from "expo-auth-session/providers/google";
 import images from '../constants/images';
-import React, { useEffect } from "react";
+import React from "react";
 import { GOOGLE_IOS_ID, GOOGLE_WEB_ID } from "@env"
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../utils/api";
