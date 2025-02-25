@@ -1,35 +1,34 @@
-import { StyleSheet, Alert, Text, Platform, ActivityIndicator, FlatList, View, Image, ImageBackground } from "react-native";
+import { StyleSheet, Alert, Text, Platform, ActivityIndicator, FlatList, View, Image, ImageBackground, Button } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import images from '../constants/images';
 import { useEffect, useState } from "react";
 import * as Location from 'expo-location';
 import { request, PERMISSIONS } from 'react-native-permissions';
 import axios from 'axios';
+import { GOOGLE_PLACES_API } from "@env";
 
 const Home = () => {
-
-  const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
+  const [location, setLocation] = useState(null);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
 
-  const GOOGLE_PLACES_API_KEY = ''
+  const GOOGLE_PLACES_API_KEY = GOOGLE_PLACES_API;
 
   const getUserLocation = async () => {
-
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert("Permission denied", 'Allow location access to find nearby stores!');
       return;
     }
-
     const location = await Location.getCurrentPositionAsync({});
     console.log(location.coords.latitude, location.coords.longitude);
     setLocation(location.coords);
     return location.coords;
   };
 
-  const getNearbyStores = async (latitude: any, longitude: any) => {
+  const getNearbyStores = async (latitude, longitude) => {
     setLoading(true);
     const radius = 5000;
     const type = 'cafe';
@@ -45,22 +44,30 @@ const Home = () => {
     } finally {
       setLoading(false);
     }
-
   };
 
   useEffect(() => {
     getUserLocation();
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (location) {
       getNearbyStores(location.latitude, location.longitude);
     }
-  }, [location]); // Runs when location updates
+  }, [location]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white', padding: 16 }}>
+      {/* Header */}
       <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 10 }}>Nearby Tea Shops 🍵</Text>
+
+      {/* Button to navigate to Weekly Calendar */}
+      <View style={{ marginBottom: 10 }}>
+        <Button
+          title="View Weekly Calendar"
+          onPress={() => navigation.navigate('events')}
+        />
+      </View>
 
       {loading ? (
         <View style={{ flex: 1, justifyContent: "center" }}>
@@ -71,11 +78,10 @@ const Home = () => {
           data={shops}
           keyExtractor={(item) => item.place_id}
           renderItem={({ item }) => {
-            // Extract first photo reference (if available)
             const photoRef = item.photos?.[0]?.photo_reference;
             const imageUrl = photoRef
               ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_PLACES_API_KEY}`
-              : "https://via.placeholder.com/400"; // Fallback image if no photo is available
+              : "https://via.placeholder.com/400";
 
             return (
               <ImageBackground source={{ uri: imageUrl }} style={styles.itemContainer} imageStyle={styles.image}>
@@ -95,17 +101,17 @@ const Home = () => {
 
 const styles = StyleSheet.create({
   itemContainer: {
-    height: 150, // Adjust height for better appearance
+    height: 150,
     borderRadius: 10,
-    overflow: "hidden", // Ensures rounded corners apply to the image
+    overflow: "hidden",
     marginBottom: 10,
     justifyContent: "flex-end",
   },
   image: {
-    borderRadius: 10, // Ensures the image itself has rounded corners
+    borderRadius: 10,
   },
   overlay: {
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent black overlay for text readability
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     padding: 10,
   },
   name: {
@@ -121,7 +127,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "white",
   },
-})
-
+});
 
 export default Home;

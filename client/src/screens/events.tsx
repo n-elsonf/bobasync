@@ -1,120 +1,282 @@
-import { Text, TouchableOpacity, View, Image, Alert, Button, FlatList } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
-import images from '../constants/images';
 import React, { useEffect, useState } from "react";
-import * as AuthSession from "expo-auth-session";
-import { GOOGLE_IOS_ID } from "@env"
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { api } from "../utils/api";
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { Text, View, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, StyleSheet, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { GOOGLE_IOS_ID, GOOGLE_WEB_ID } from "@env";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import axios from "axios";
+import moment from "moment";
+import { useAuth } from "../context/AuthContext";
 
-export default function Events() {
 
-  GoogleSignin.configure({
-    iosClientId: GOOGLE_IOS_ID,
-    scopes: ['https://www.googleapis.com/auth/calendar.readonly'],
-    offlineAccess: true, // Enables refresh token
-  });
-
-  const signInWithGoogle = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      const tokens = await GoogleSignin.getTokens();
-
-      // Store refresh token (securely)
-      await AsyncStorage.setItem("refreshToken", tokens.refreshToken);
-
-      return tokens.accessToken;
-    } catch (error) {
-      console.error("Google Sign-In Error:", error);
-    }
+interface CalendarEvent {
+  id: string;
+  summary: string;
+  start: {
+    dateTime?: string;
+    date?: string;
+    timeZone?: string;
   };
-
-
-  const fetchGoogleCalendarEvents = async (accessToken: any) => {
-    try {
-      const response = await fetch(
-        "https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=" +
-        new Date().toISOString() +
-        "&timeMax=" +
-        new Date(new Date().setHours(23, 59, 59, 999)).toISOString() +
-        "&singleEvents=true&orderBy=startTime",
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
-
-      const data = await response.json();
-      return data.items; // List of events
-    } catch (error) {
-      console.error("Error fetching calendar events:", error);
-    }
+  end: {
+    dateTime?: string;
+    date?: string;
+    timeZone?: string;
   };
+  description?: string;
+}
 
-  const [events, setEvents] = useState([]);
-  const [accessToken, setAccessToken] = useState(null);
 
-  const handleSignIn = async () => {
-    const token = await signInWithGoogle();
-    setAccessToken(token);
-    const fetchedEvents = await fetchGoogleCalendarEvents(token);
-    setEvents(fetchedEvents);
-  };
+export default function InfiniteScrollCalendar() {
+  const { accessToken } = useAuth();
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [selectedDay, setSelectedDay] = useState(moment().format("YYYY-MM-DD"));
+  const [loading, setLoading] = useState(false);
 
-  const refreshAccessToken = async () => {
-    const refreshToken = await AsyncStorage.getItem("refreshToken");
 
-    if (!refreshToken) return null;
+  // // Configure Google Sign-In
+  // GoogleSignin.configure({
+  //   webClientId: GOOGLE_WEB_ID,
+  //   iosClientId: GOOGLE_IOS_ID,
+  //   scopes: ["https://www.googleapis.com/auth/calendar.readonly", "email", "profile"],
+  //   offlineAccess: true,
+  // });
 
+  // // Sign in with Google
+  // const signInWithGoogle = async () => {
+  //   try {
+  //     await GoogleSignin.hasPlayServices();
+  //     await GoogleSignin.signIn();
+  //     const tokens = await GoogleSignin.getTokens();
+  //     setAccessToken(tokens.accessToken);
+  //   } catch (error) {
+  //     console.error("Google sign-in error:", error);
+  //   }
+  // };
+
+  const [eventsByDate, setEventsByDate] = useState<Record<string, CalendarEvent[]>>({});
+
+  // In your fetchAllEvents function, modify how events are stored:
+  const fetchAllEvents = async (calendarId = "primary", pageToken = null) => {
     try {
-      const response = await fetch("https://oauth2.googleapis.com/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          client_id: "YOUR_CLIENT_ID",
-          client_secret: "YOUR_CLIENT_SECRET",
-          refresh_token: refreshToken,
-          grant_type: "refresh_token",
-        }).toString(),
+      let url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?singleEvents=true&orderBy=startTime`;
+      if (pageToken) {
+        url += `&pageToken=${pageToken}`;
+      }
+
+      const response = await axios.get<{ items: CalendarEvent[]; nextPageToken?: string }>(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
 
-      const data = await response.json();
-      return data.access_token;
+      const newEvents = response.data.items || [];
+
+      // Organize events by date
+      setEventsByDate(prevEvents => {
+        const updatedEvents = { ...prevEvents };
+
+        newEvents.forEach(event => {
+          // Get the date from either dateTime or date field
+          const eventDate = event.start.dateTime
+            ? moment(event.start.dateTime).format('YYYY-MM-DD')
+            : event.start.date;
+
+          if (eventDate) {
+            if (!updatedEvents[eventDate]) {
+              updatedEvents[eventDate] = [];
+            }
+            updatedEvents[eventDate].push(event);
+          }
+        });
+
+        return updatedEvents;
+      });
+
+      if (response.data.nextPageToken) {
+        await fetchAllEvents(calendarId, response.data.nextPageToken);
+      }
     } catch (error) {
-      console.error("Token refresh error:", error);
+      console.error("Error fetching events:", error);
     }
   };
 
-  const ensureValidAccessToken = async () => {
-    let token = await AsyncStorage.getItem("accessToken");
-
-    if (!token) {
-      token = await refreshAccessToken();
-      if (token) await AsyncStorage.setItem("accessToken", token);
+  useEffect(() => {
+    if (accessToken) {
+      fetchAllEvents();  // ✅ Fetch events after token is set
     }
+  }, [accessToken]);
 
-    return token;
+  // Generate days around the current week
+  const generateDays = () => {
+    const days = [];
+    for (let i = -30; i <= 30; i++) {
+      days.push(moment().add(i, "days").format("YYYY-MM-DD"));
+    }
+    return days;
+  };
+
+  const renderDay = ({ item }: { item: string }) => {
+    const isSelected = item === selectedDay;
+    const hasEvents = eventsByDate[item]?.length > 0;
+
+    return (
+      <TouchableOpacity
+        style={[styles.dayButton, isSelected && styles.selectedDayButton]}
+        onPress={() => setSelectedDay(item)}
+      >
+        <Text style={[styles.dayText, isSelected && styles.selectedDayText]}>
+          {moment(item).format("ddd")}
+        </Text>
+        <Text style={[styles.dateText, isSelected && styles.selectedDayText]}>
+          {moment(item).format("D")}
+        </Text>
+        {hasEvents && <View style={styles.eventDot} />}
+      </TouchableOpacity>
+    );
+  };
+
+  const renderEventsForSelectedDay = () => {
+    const dayEvents = eventsByDate[selectedDay] || [];
+
+    return (
+      <View style={styles.eventsContainer}>
+        <Text style={styles.eventsHeader}>
+          Events for {moment(selectedDay).format("dddd, MMM D")}
+        </Text>
+
+        {dayEvents.length > 0 ? (
+          dayEvents.map((event, index) => (
+            <View key={event.id || index} style={styles.eventCard}>
+              <Text style={styles.eventTitle}>{event.summary}</Text>
+              <Text style={styles.eventTime}>
+                {event.start.dateTime
+                  ? `${moment(event.start.dateTime).format('h:mm A')} - ${moment(event.end.dateTime).format('h:mm A')}`
+                  : 'All day'}
+              </Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noEventText}>No events for this day.</Text>
+        )}
+      </View>
+    );
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Button title="Sign in with Google" onPress={handleSignIn} />
-      {events.length > 0 && (
-        <FlatList
-          data={events}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={{ marginVertical: 10 }}>
-              <Text style={{ fontSize: 18, fontWeight: "bold" }}>{item.summary}</Text>
-              <Text>{new Date(item.start.dateTime || item.start.date).toLocaleString()}</Text>
-            </View>
-          )}
-        />
+    <SafeAreaView style={styles.container}>
+      {loading ? (
+        <ActivityIndicator size="large" style={{ marginTop: 20 }} />
+      ) : (
+        <>
+          <FlatList
+            horizontal
+            data={generateDays()}
+            keyExtractor={(item) => item}
+            renderItem={renderDay}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.weekDaysContainer}
+          />
+          {renderEventsForSelectedDay()}
+        </>
       )}
-    </View>
+    </SafeAreaView>
   );
-};
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 0,
+    marginTop: StatusBar.currentHeight,
+    backgroundColor: "#f9f9f9",
+  },
+  weekDaysContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+  },
+  dayButton: {
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 10,
+    marginHorizontal: 5,
+    backgroundColor: "#e0f7fa",
+    width: 70,
+  },
+  selectedDayButton: {
+    backgroundColor: "#007AFF",
+  },
+  dayText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  dateText: {
+    fontSize: 12,
+    color: "#555",
+  },
+  selectedDayText: {
+    color: "#fff",
+  },
+  eventDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#FF5733",
+    marginTop: 3,
+  },
+  eventsContainer: {
+    marginTop: 20,
+    padding: 10,
+    margin: 10,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  eventsHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#007AFF",
+  },
+  eventCard: {
+    backgroundColor: "#e0f7fa",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+  eventTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+  },
+  eventTime: {
+    fontSize: 12,
+    color: "#555",
+  },
+  noEventText: {
+    textAlign: "center",
+    fontSize: 14,
+    color: "#999",
+  },
+  centered: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  signInText: {
+    marginBottom: 10,
+    fontSize: 16,
+    color: "#333",
+  },
+  signInButton: {
+    backgroundColor: "#4285F4",
+    color: "white",
+    padding: 10,
+    borderRadius: 5,
+    textAlign: "center",
+    width: 200,
+  },
+  eventDescription: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+});
