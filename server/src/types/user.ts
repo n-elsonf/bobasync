@@ -1,17 +1,9 @@
-import { Document, Model, Schema } from "mongoose";
-
-// Friend request interface
-interface IFriendRequest {
-  _id: Schema.Types.ObjectId;
-  // friendId who sent the request
-  from: Schema.Types.ObjectId;
-  status: 'pending' | 'accepted' | 'rejected';
-  createdAt: Date;
-}
+import { Document, Model, Types } from "mongoose";
+import { IFriendRequest } from "./friendRequest";
 
 // Interface to define the User document structure
 export interface IUser extends Document {
-  _id: Schema.Types.ObjectId;
+  _id: Types.ObjectId;
   name: string;
   email: string;
   password: string;
@@ -27,23 +19,23 @@ export interface IUser extends Document {
   updatedAt: Date;
   
   // Friend-related fields
-  friends: Schema.Types.ObjectId[];
+  friends: Types.ObjectId[];
   // Map from requestId to friend request
   friendRequests: IFriendRequest[];
   // List of blocked users
-  blockedUsers: Schema.Types.ObjectId[];
+  blockedUsers: Types.ObjectId[];
 
   // fields not included in schema
   // Map from requestId to friend request
-  friendRequestsWithRequestId: Map<Schema.Types.ObjectId, IFriendRequest>;
+  friendRequestsWithRequestId: Map<string, IFriendRequest>;
   // Map from senderId to friend request
-  friendRequestsWithSenderId: Map<Schema.Types.ObjectId, IFriendRequest>;
-  
+  friendRequestsWithSenderId: Map<string, IFriendRequest>;
+
 }
 
 export interface IUserMethods {
   comparePassword(candidatePassword: string): Promise<boolean>;
-  getPublicProfile(): Partial<IUser>;
+  getPublicProfile(): PublicUser;
   sendFriendRequest(friendId: string): Promise<void>;
   acceptFriendRequest(requestId: string): Promise<void>;
   rejectFriendRequest(requestId: string): Promise<void>;

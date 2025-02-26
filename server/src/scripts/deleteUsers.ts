@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import User from "../models/user";
+import User from "../models/user.model";
 dotenv.config();
 
 // Assert that MONGODB_URI exists and is a string
