@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Text, View, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, StyleSheet, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { GOOGLE_IOS_ID, GOOGLE_WEB_ID } from "@env";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import axios from "axios";
 import moment from "moment";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 
 interface CalendarEvent {
@@ -25,37 +23,16 @@ interface CalendarEvent {
 }
 
 
-export default function InfiniteScrollCalendar() {
+export default function Events() {
+
   const { accessToken } = useAuth();
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDay, setSelectedDay] = useState(moment().format("YYYY-MM-DD"));
   const [loading, setLoading] = useState(false);
-
-
-  // // Configure Google Sign-In
-  // GoogleSignin.configure({
-  //   webClientId: GOOGLE_WEB_ID,
-  //   iosClientId: GOOGLE_IOS_ID,
-  //   scopes: ["https://www.googleapis.com/auth/calendar.readonly", "email", "profile"],
-  //   offlineAccess: true,
-  // });
-
-  // // Sign in with Google
-  // const signInWithGoogle = async () => {
-  //   try {
-  //     await GoogleSignin.hasPlayServices();
-  //     await GoogleSignin.signIn();
-  //     const tokens = await GoogleSignin.getTokens();
-  //     setAccessToken(tokens.accessToken);
-  //   } catch (error) {
-  //     console.error("Google sign-in error:", error);
-  //   }
-  // };
 
   const [eventsByDate, setEventsByDate] = useState<Record<string, CalendarEvent[]>>({});
 
   // In your fetchAllEvents function, modify how events are stored:
-  const fetchAllEvents = async (calendarId = "primary", pageToken = null) => {
+  const fetchAllEvents = async (calendarId = "primary", pageToken: string | null = null) => {
     try {
       let url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?singleEvents=true&orderBy=startTime`;
       if (pageToken) {
@@ -89,8 +66,10 @@ export default function InfiniteScrollCalendar() {
         return updatedEvents;
       });
 
-      if (response.data.nextPageToken) {
-        await fetchAllEvents(calendarId, response.data.nextPageToken);
+      const nextPageToken: string | undefined = response.data.nextPageToken;
+
+      if (typeof nextPageToken === "string") {
+        await fetchAllEvents(calendarId, nextPageToken);
       }
     } catch (error) {
       console.error("Error fetching events:", error);

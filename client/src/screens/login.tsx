@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Keyboard, Button } from 'react-native';
+import { Text, TextInput, TouchableOpacity, Alert, StyleSheet, Keyboard, Button } from 'react-native';
 import { api } from "../utils/api"; // Import the API instance
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from 'expo-router';
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
-import images from '../constants/images'
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import '../../global.css';
 import { ArrowLeft } from "lucide-react-native";
@@ -15,7 +12,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const navigation = useNavigation();
+  const router = useRouter();
   const handleForget = async () => {
 
     if (!email || !password) {
@@ -49,7 +46,7 @@ const Login = () => {
       await AsyncStorage.setItem("authToken", token);
 
       Alert.alert("Success", "Login successful!");
-      navigation.navigate("Home"); // Navigate to Home Screen
+      router.push('./home');
     } catch (error: any) {
       console.error("Login error:", error);
       Alert.alert("Login Failed", error.response?.data?.message || "Something went wrong.");
@@ -61,7 +58,7 @@ const Login = () => {
   return (
 
     <SafeAreaView className='flex-1 justify-center px-5  bg-gray-100'>
-      <TouchableOpacity onPress={() => navigation.goBack()} className="absolute top-14 left-5 p-2 bg-white shadow-md shadow-zinc-300 rounded-full">
+      <TouchableOpacity onPress={() => router.back()} className="absolute top-14 left-5 p-2 bg-white shadow-md shadow-zinc-300 rounded-full">
         <ArrowLeft size={24} />
       </TouchableOpacity>
       <Text className='pb-5 text-2xl font-bold text-center'>Sign In 🧋</Text>
