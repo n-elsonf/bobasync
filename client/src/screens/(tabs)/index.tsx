@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Alert, Text, ActivityIndicator, FlatList, View, Image, ImageBackground } from "react-native";
+import { StyleSheet, Alert, Text, ActivityIndicator, FlatList, View, Image, ImageBackground, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
 import axios from 'axios';
 import { GOOGLE_PLACES_API } from '@env';
+import { router, useLocalSearchParams } from 'expo-router';
 
 type Place = {
   place_id: string;
@@ -14,9 +15,31 @@ type Place = {
 };
 
 export default function Index() {
+
+  const params = useLocalSearchParams();
+  const isSelectingTeaShop = params.selectingTeaShop === 'true';
+
   const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const handleTeaShopPress = (teaShop: Place) => {
+    if (isSelectingTeaShop) {
+      // If we're in selection mode, navigate back to add-event with the selected shop
+      router.push({
+        pathname: './add-event',
+        params: { teaShopName: teaShop.name }
+      });
+    } else {
+      // Normal tea shop interaction (e.g., view details)
+      // router.push({
+      //   pathname: `./tea-shop/${teaShop.id}`,
+      //   params: { name: teaShop.name }
+      // });
+      console.log("Implement normal tea shop interaction.")
+    }
+  };
+
 
   const GOOGLE_PLACES_API_KEY = GOOGLE_PLACES_API;
 
@@ -82,13 +105,15 @@ export default function Index() {
               : "https://via.placeholder.com/400";
 
             return (
-              <ImageBackground source={{ uri: imageUrl }} style={styles.itemContainer} imageStyle={styles.image}>
-                <View style={styles.overlay}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.address}>{item.vicinity}</Text>
-                  <Text style={styles.rating}>Rating: ⭐ {item.rating || 'N/A'}</Text>
-                </View>
-              </ImageBackground>
+              <TouchableOpacity onPress={() => handleTeaShopPress(item)}>
+                <ImageBackground source={{ uri: imageUrl }} style={styles.itemContainer} imageStyle={styles.image}>
+                  <View style={styles.overlay}>
+                    <Text style={styles.name}>{item.name}</Text>
+                    <Text style={styles.address}>{item.vicinity}</Text>
+                    <Text style={styles.rating}>Rating: ⭐ {item.rating || 'N/A'}</Text>
+                  </View>
+                </ImageBackground>
+              </TouchableOpacity>
             );
           }}
         />

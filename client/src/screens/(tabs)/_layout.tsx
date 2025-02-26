@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
 import { View, TouchableOpacity, StyleSheet, GestureResponderEvent } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,7 +21,9 @@ export default function TabsLayout() {
         height: 70,
         borderRadius: 35,
         backgroundColor: '#00cc99',
-        ...styles.shadow
+        ...styles.shadow,
+        justifyContent: 'center',
+        alignItems: 'center',
       }}>
         {children}
       </View>
@@ -52,6 +54,22 @@ export default function TabsLayout() {
         }}
       />
 
+
+      <Tabs.Screen
+        name="add-event"
+        options={{
+          title: "Add Event",
+          tabBarButton: (props) => (
+            <CustomTabBarButton onPress={() => router.push('./add-event')}>
+              <Ionicons name="add" size={30} color="#ffffff" />
+            </CustomTabBarButton>
+          ),
+          tabBarStyle: { display: 'none' },
+        }}
+      />
+
+
+
       <Tabs.Screen
         name="events"
         options={{
@@ -61,6 +79,7 @@ export default function TabsLayout() {
           ),
         }}
       />
+
     </Tabs>
   );
 }

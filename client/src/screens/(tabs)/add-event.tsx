@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,12 @@ import {
   Alert
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function AddEventScreen() {
+  const params = useLocalSearchParams();
   const [teaShopInfo, setTeaShopInfo] = useState('');
   const [eventName, setEventName] = useState('');
   const [date, setDate] = useState(new Date());
@@ -25,6 +26,13 @@ export default function AddEventScreen() {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+
+  // Check if tea shop info was passed via URL params
+  useEffect(() => {
+    if (params.teaShopName) {
+      setTeaShopInfo(params.teaShopName as string);
+    }
+  }, [params.teaShopName]);
 
   const onDateChange = (event: any, selectedDate?: Date) => {
     const currentDate = selectedDate || date;
@@ -36,6 +44,14 @@ export default function AddEventScreen() {
     const currentTime = selectedTime || time;
     setShowTimePicker(Platform.OS === 'ios');
     setTime(currentTime);
+  };
+
+  const handleSelectTeaShop = () => {
+    // Navigate to home screen with a flag indicating we're selecting a tea shop for an event
+    router.push({
+      pathname: './',
+      params: { selectingTeaShop: 'true' }
+    });
   };
 
   const handleAddEvent = () => {
@@ -57,11 +73,11 @@ export default function AddEventScreen() {
     // Here you would typically save the event to your state/database
     console.log('New Event:', newEvent);
 
-    // Show success message and navigate back
+    // Show success message and navigate back to events tab
     Alert.alert(
       'Success!',
       'Event has been created successfully.',
-      [{ text: 'OK', onPress: () => router.back() }]
+      [{ text: 'OK', onPress: () => router.push('./events') }]
     );
   };
 
@@ -84,12 +100,15 @@ export default function AddEventScreen() {
         <ScrollView style={styles.scrollView}>
           <View style={styles.formContainer}>
             <Text style={styles.label}>Tea Shop Information</Text>
-            <TextInput
-              style={styles.input}
-              value={teaShopInfo}
-              onChangeText={setTeaShopInfo}
-              placeholder="Enter tea shop details"
-            />
+            <TouchableOpacity
+              style={[styles.input, styles.teaShopButton]}
+              onPress={handleSelectTeaShop}
+            >
+              <Text style={teaShopInfo ? styles.teaShopText : styles.placeholderText}>
+                {teaShopInfo || "Tap to select a tea shop"}
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color="#aaa" />
+            </TouchableOpacity>
 
             <Text style={styles.label}>Event Name</Text>
             <TextInput
@@ -199,6 +218,19 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: '#fafafa',
+  },
+  teaShopButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  teaShopText: {
+    color: '#000',
+    fontSize: 16,
+  },
+  placeholderText: {
+    color: '#aaa',
+    fontSize: 16,
   },
   dateTimeButton: {
     borderWidth: 1,
