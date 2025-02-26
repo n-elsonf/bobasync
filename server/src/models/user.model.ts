@@ -1,7 +1,8 @@
 // src/models/User.ts
-import mongoose, { ObjectId, Schema} from "mongoose";
+import mongoose, { Types, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
-import { IUser, IUserMethods, IUserModel, PublicUser } from "./types";
+import { IUser, IUserMethods, IUserModel, PublicUser } from "../types/user";
+import { IFriendRequest } from "../types/friendRequest";
 
 const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   {
@@ -95,22 +96,34 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   }
 );
 
-// userSchema.post('find', function(docs) {
-//   // Handle both single doc and array of docs
-//   const documents = Array.isArray(docs) ? docs : [docs];
+// Helper function to initialize maps for a document
+const initializeMaps = function(docs: any) {
+  // Handle both single doc and array of docs
+  const documents = Array.isArray(docs) ? docs : [docs];
   
-//   documents.forEach(doc => {
-//     if (doc && doc.friendRequests) {
-//       // Initialize maps
-//       doc.friendRequestsWithRequestId = new Map(
-//         doc.friendRequests.map(request => [request._id, request])
-//       );
-//       doc.friendRequestsWithSenderId = new Map(
-//         doc.friendRequests.map(request => [request.from, request])
-//       );
-//     }
-//   });
-// });
+  documents.forEach(doc => {
+    if (doc && doc.friendRequests) {
+      // Initialize request ID map
+      doc.friendRequestsWithRequestId = new Map(
+        doc.friendRequests.map((request: IFriendRequest) => [request._id.toString(), request])
+      );
+      
+      // Initialize sender ID map
+      doc.friendRequestsWithSenderId = new Map(
+        doc.friendRequests.map((request: IFriendRequest) => [request.from.toString(), request])
+      );
+    }
+  });
+};
+
+// Initialize maps when document is loaded
+userSchema.post("find", initializeMaps);
+userSchema.post("findOne", initializeMaps);
+
+// Also handle init to ensure maps are created when documents are initialized
+userSchema.post('init', initializeMaps);
+
+
 // Pre-save middleware to hash password
 userSchema.pre("save", async function (next) {
   // Only hash password if it has been modified
@@ -153,15 +166,18 @@ userSchema.methods.getPublicProfile = function (): PublicUser {
 };
 
 // Add friend-related methods
-userSchema.methods.sendFriendRequest = async function(friendId: string | ObjectId) {
-  const friendObjectId = typeof friendId === 'string' ? new Schema.Types.ObjectId(friendId) : friendId;
+userSchema.methods.sendFriendRequest = async function(friendId: string) {
+  if (this._id.toString() === friendId) {
+    throw new Error('Cannot send friend request to self');
+  }
+
   // Check if already friends
-  if (this.friends.includes(friendObjectId)) {
+  if (this.friends.some((id: Types.ObjectId) => id.toString() === friendId)) {
     throw new Error('Already friends with this user');
   }
 
   // Check if blocked
-  if (this.blockedUsers.includes(friendObjectId) || 
+  if (this.blockedUsers.some((id: Types.ObjectId) => id.toString() === friendId) || 
       (await User.findById(friendId))?.blockedUsers.includes(this._id)) {
     throw new Error('Unable to send friend request');
   }
@@ -172,7 +188,7 @@ userSchema.methods.sendFriendRequest = async function(friendId: string | ObjectI
     throw new Error('User not found');
   }
 
-  const existingRequest = targetUser.friendRequestsWithSenderId.get(this._id);
+  const existingRequest = targetUser.friendRequestsWithSenderId.get(this._id.toString());
   if (existingRequest) {
     throw new Error('Friend request already sent');
   }
@@ -188,9 +204,8 @@ userSchema.methods.sendFriendRequest = async function(friendId: string | ObjectI
   });
 };
 
-userSchema.methods.acceptFriendRequest = async function(requestId: string | ObjectId) {
-  const requestObjectId = typeof requestId === 'string' ? new Schema.Types.ObjectId(requestId) : requestId;
-  const request = this.friendRequestsWithRequestId.get(requestObjectId);
+userSchema.methods.acceptFriendRequest = async function(requestId: string) {
+  const request = this.friendRequestsWithRequestId.get(requestId);
   if (!request || request.status !== 'pending') {
     throw new Error('Invalid friend request');
   }
@@ -207,9 +222,8 @@ userSchema.methods.acceptFriendRequest = async function(requestId: string | Obje
   await this.save();
 };
 
-userSchema.methods.rejectFriendRequest = async function(requestId: string | ObjectId) {
-  const requestObjectId = typeof requestId === 'string' ? new Schema.Types.ObjectId(requestId) : requestId;
-  const request = this.friendRequestsWithRequestId.get(requestObjectId);
+userSchema.methods.rejectFriendRequest = async function(requestId: string) {
+  const request = this.friendRequestsWithRequestId.get(requestId);
   if (!request || request.status !== 'pending') {
     throw new Error('Invalid friend request');
   }
@@ -218,14 +232,13 @@ userSchema.methods.rejectFriendRequest = async function(requestId: string | Obje
   await this.save();
 };
 
-userSchema.methods.removeFriend = async function(friendId: string | ObjectId) {
-  const friendObjectId = typeof friendId === 'string' ? new Schema.Types.ObjectId(friendId) : friendId;
-  if (!this.friends.includes(friendObjectId)) {
+userSchema.methods.removeFriend = async function(friendId: string) {
+  if (!this.friends.some((id: Types.ObjectId) => id.toString() === friendId)) {
     throw new Error('User is not a friend');
   }
 
   // Remove from both users' friend lists
-  this.friends = this.friends.filter(id => id.toString() !== friendId.toString());
+  this.friends = this.friends.filter(id => id.toString() !== friendId);
   await User.findByIdAndUpdate(friendId, {
     $pull: { friends: this._id }
   });

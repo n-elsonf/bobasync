@@ -1,4 +1,4 @@
-import User from "../models/user";
+import User from "../models/user.model";
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
@@ -147,7 +147,6 @@ export class AuthService {
    */
   public static async googleAuth(idToken: string): Promise<AuthResponse> {
     try {
-      console.log("Google ID Token:", idToken);
       // Verify Google token
       const ticket = await this.googleClient.verifyIdToken({
         idToken,
@@ -158,6 +157,7 @@ export class AuthService {
       if (!payload || !payload.email) {
         throw new AuthenticationError("Invalid Google token");
       }
+
 
       // Find or create user
       let user = await User.findOne({ email: payload.email });
