@@ -15,6 +15,7 @@ import { StatusBar } from 'expo-status-bar';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import FriendsDropdown from '../../components/FriendsDropdown'
 
 export default function AddEventScreen() {
   const params = useLocalSearchParams();
@@ -22,8 +23,7 @@ export default function AddEventScreen() {
   const [eventName, setEventName] = useState('');
   const [date, setDate] = useState(new Date());
   const [time, setTime] = useState(new Date());
-  const [users, setUsers] = useState('');
-
+  const [selectedFriends, setSelectedFriends] = useState([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -50,8 +50,14 @@ export default function AddEventScreen() {
     // Navigate to home screen with a flag indicating we're selecting a tea shop for an event
     router.push({
       pathname: './',
-      params: { selectingTeaShop: 'true' }
+      params: {
+        selectingTeaShop: 'true',
+      }
     });
+  };
+  const handleBackButton = () => {
+    // Always go to events when pressing back from add-event
+    router.push('./');
   };
 
   const handleAddEvent = () => {
@@ -67,7 +73,7 @@ export default function AddEventScreen() {
       eventName,
       date: date.toISOString().split('T')[0],
       time: `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`,
-      users: users.split(',').map(user => user.trim()),
+      attendees: selectedFriends.map(friend => ({ id: friend.id, name: friend.name })),
     };
 
     // Here you would typically save the event to your state/database
@@ -86,7 +92,7 @@ export default function AddEventScreen() {
       <StatusBar style="auto" />
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={handleBackButton} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#00cc99" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Add New Event</Text>
@@ -153,13 +159,13 @@ export default function AddEventScreen() {
               />
             )}
 
-            <Text style={styles.label}>Users (comma separated)</Text>
-            <TextInput
-              style={styles.input}
-              value={users}
-              onChangeText={setUsers}
-              placeholder="Enter user names"
+            <Text style={styles.label}>Invite Friends</Text>
+            {/* Replace TextInput with our new FriendsDropdown component */}
+            <FriendsDropdown
+              selectedFriends={selectedFriends}
+              setSelectedFriends={setSelectedFriends}
             />
+
 
             <TouchableOpacity
               style={styles.addButton}
