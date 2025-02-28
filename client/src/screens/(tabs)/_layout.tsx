@@ -1,8 +1,9 @@
 import React from 'react';
 import { Tabs, router } from "expo-router";
-import { View, TouchableOpacity, StyleSheet, GestureResponderEvent } from "react-native";
+import { View, TouchableOpacity, StyleSheet, GestureResponderEvent, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import images from "../../constants/images";
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
@@ -54,7 +55,6 @@ export default function TabsLayout() {
         }}
       />
 
-
       <Tabs.Screen
         name="add-event"
         options={{
@@ -68,8 +68,6 @@ export default function TabsLayout() {
         }}
       />
 
-
-
       <Tabs.Screen
         name="events"
         options={{
@@ -80,6 +78,26 @@ export default function TabsLayout() {
         }}
       />
 
+      <Tabs.Screen
+        name="profileScreen"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={images.defaultpfp}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 22,
+                borderWidth: 1.5,
+                borderColor: focused ? "#00cc99" : "#748c94",
+                opacity: focused ? 1 : 0.85,
+                backgroundColor: focused ? undefined : "#f5f5f5"
+              }}
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

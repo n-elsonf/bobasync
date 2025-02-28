@@ -1,7 +1,6 @@
 import { Text, TouchableOpacity, View, Image, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import * as Google from "expo-auth-session/providers/google";
 import images from '../constants/images';
 import React from "react";
 import { GOOGLE_IOS_ID, GOOGLE_WEB_ID } from "@env"
