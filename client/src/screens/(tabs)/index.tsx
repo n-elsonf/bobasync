@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Alert, Text, ActivityIndicator, FlatList, View, Image, ImageBackground } from "react-native";
+import { StyleSheet, Alert, Text, ActivityIndicator, FlatList, View, Image, ImageBackground, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
 import axios from 'axios';
 import { GOOGLE_PLACES_API } from '@env';
+import { router, useLocalSearchParams } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Place = {
   place_id: string;
@@ -14,9 +16,57 @@ type Place = {
 };
 
 export default function Index() {
+
+  const params = useLocalSearchParams();
+  const isSelectingTeaShop = params.selectingTeaShop === 'true';
+
+  const [selectionMode, setSelectionMode] = useState<'normal' | 'tea-shop-selection'>('normal');
   const [location, setLocation] = useState<Location.LocationObjectCoords | null>(null);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const checkNavigationMode = async () => {
+      if (params.selectingTeaShop === 'true') {
+        setSelectionMode('tea-shop-selection');
+        // Store that we're in selection mode
+        await AsyncStorage.setItem('navigationMode', 'tea-shop-selection');
+      } else {
+        // Check if we have a stored mode
+        const storedMode = await AsyncStorage.getItem('navigationMode');
+        if (storedMode === 'tea-shop-selection') {
+          setSelectionMode('tea-shop-selection');
+        } else {
+          setSelectionMode('normal');
+          // Clear any stored selection mode
+          await AsyncStorage.removeItem('navigationMode');
+        }
+      }
+    };
+
+    checkNavigationMode();
+  }, [params.selectingTeaShop]);
+
+
+  const handleTeaShopPress = async (teaShop: Place) => {
+    if (selectionMode === 'tea-shop-selection') {
+      // If we're in selection mode, navigate back to add-event with the selected shop
+      // Clear the selection mode for next time
+      await AsyncStorage.removeItem('navigationMode');
+
+      router.push({
+        pathname: './add-event',
+        params: {
+          teaShopName: teaShop.name,
+        }
+      });
+    } else {
+      // Normal tea shop interaction (e.g., view details)
+      console.log("Implement normal tea shop interaction.");
+      // Implement your normal tea shop interaction here
+    }
+  };
+
 
   const GOOGLE_PLACES_API_KEY = GOOGLE_PLACES_API;
 
@@ -82,13 +132,15 @@ export default function Index() {
               : "https://via.placeholder.com/400";
 
             return (
-              <ImageBackground source={{ uri: imageUrl }} style={styles.itemContainer} imageStyle={styles.image}>
-                <View style={styles.overlay}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.address}>{item.vicinity}</Text>
-                  <Text style={styles.rating}>Rating: ⭐ {item.rating || 'N/A'}</Text>
-                </View>
-              </ImageBackground>
+              <TouchableOpacity onPress={() => handleTeaShopPress(item)}>
+                <ImageBackground source={{ uri: imageUrl }} style={styles.itemContainer} imageStyle={styles.image}>
+                  <View style={styles.overlay}>
+                    <Text style={styles.name}>{item.name}</Text>
+                    <Text style={styles.address}>{item.vicinity}</Text>
+                    <Text style={styles.rating}>Rating: ⭐ {item.rating || 'N/A'}</Text>
+                  </View>
+                </ImageBackground>
+              </TouchableOpacity>
             );
           }}
         />
