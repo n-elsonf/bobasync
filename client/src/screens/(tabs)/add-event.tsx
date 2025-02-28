@@ -17,6 +17,12 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FriendsDropdown from '../../components/FriendsDropdown'
 
+
+type Friend = {
+  id: string;
+  name: string;
+};
+
 export default function AddEventScreen() {
   const params = useLocalSearchParams();
   const [teaShopInfo, setTeaShopInfo] = useState('');
@@ -73,7 +79,10 @@ export default function AddEventScreen() {
       eventName,
       date: date.toISOString().split('T')[0],
       time: `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`,
-      attendees: selectedFriends.map(friend => ({ id: friend.id, name: friend.name })),
+      attendees: selectedFriends.map((friend) => ({
+        id: (friend as Friend).id,
+        name: (friend as Friend).name,
+      }))
     };
 
     // Here you would typically save the event to your state/database
