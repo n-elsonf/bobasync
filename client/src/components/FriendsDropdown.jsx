@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,58 +7,104 @@ import {
   FlatList,
   StyleSheet,
   Modal,
-  Pressable
+  Animated,
+  ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-// Sample friends data - replace with your actual data source
-const SAMPLE_FRIENDS = [
-  { id: '1', name: 'Alex Johnson' },
-  { id: '2', name: 'Taylor Smith' },
-  { id: '3', name: 'Jordan Lee' },
-  { id: '4', name: 'Casey Brown' },
-  { id: '5', name: 'Morgan Wilson' },
-  { id: '6', name: 'Riley Davis' },
-  { id: '7', name: 'Quinn Martinez' },
-  { id: '8', name: 'Jamie Taylor' },
-  { id: '9', name: 'Avery Lopez' },
-  { id: '10', name: 'Drew Garcia' },
-];
+import { api } from '../utils/api'; // Import your API utility
 
 const FriendsDropdown = ({ selectedFriends, setSelectedFriends }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredFriends, setFilteredFriends] = useState(SAMPLE_FRIENDS);
+  const [friends, setFriends] = useState([]);
+  const [filteredFriends, setFilteredFriends] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Animate overlay when modal visibility changes
+  useEffect(() => {
+    if (modalVisible) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [modalVisible]);
+
+  // Fetch friends when component mounts or modal opens
+  useEffect(() => {
+    if (modalVisible) {
+      fetchFriends();
+    }
+  }, [modalVisible]);
+
+  const fetchFriends = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Use api.get instead of api.post since the controller handles GET requests
+      const response = await api.post('/friends');
+      console.log('Friends API Response:', response);
+
+      // Based on your controller, response should have a structure with success and data fields
+      if (!response || !response.success || !Array.isArray(response.data)) {
+        throw new Error('Unexpected API response format');
+      }
+
+      // Your controller already populates friend details, so we can use them directly
+      setFriends(response.data);
+      setFilteredFriends(response.data);
+    } catch (err) {
+      console.error('Error fetching friends:', err);
+      setError('Failed to load friends. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter friends based on search query
   useEffect(() => {
     if (searchQuery) {
-      const filtered = SAMPLE_FRIENDS.filter(friend =>
-        friend.name.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = friends.filter(friend =>
+        friend.name && friend.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredFriends(filtered);
     } else {
-      setFilteredFriends(SAMPLE_FRIENDS);
+      setFilteredFriends(friends);
     }
-  }, [searchQuery]);
+  }, [searchQuery, friends]);
 
   // Check if a friend is selected
   const isFriendSelected = (friendId) => {
-    return selectedFriends.some(friend => friend.id === friendId);
+    return selectedFriends.some(friend => friend._id === friendId);
   };
 
   // Toggle friend selection
   const toggleFriendSelection = (friend) => {
-    if (isFriendSelected(friend.id)) {
-      setSelectedFriends(selectedFriends.filter(f => f.id !== friend.id));
+    if (isFriendSelected(friend._id)) {
+      setSelectedFriends(selectedFriends.filter(f => f._id !== friend._id));
     } else {
       setSelectedFriends([...selectedFriends, friend]);
     }
   };
 
+  // Extract first letter of name for avatar
+  const getInitial = (name) => {
+    return name && typeof name === 'string' ? name.charAt(0).toUpperCase() : '?';
+  };
+
   // Render each friend item
   const renderFriendItem = ({ item }) => {
-    const isSelected = isFriendSelected(item.id);
+    const isSelected = isFriendSelected(item._id);
 
     return (
       <TouchableOpacity
@@ -68,17 +114,68 @@ const FriendsDropdown = ({ selectedFriends, setSelectedFriends }) => {
         ]}
         onPress={() => toggleFriendSelection(item)}
       >
-        <Text style={[
-          styles.friendName,
-          isSelected && styles.selectedFriendName
-        ]}>
-          {item.name}
-        </Text>
+        <View style={styles.friendInfo}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{getInitial(item.name)}</Text>
+          </View>
+          <Text style={[
+            styles.friendName,
+            isSelected && styles.selectedFriendName
+          ]}>
+            {item.name || `User ${item._id.slice(-5)}`}
+          </Text>
+        </View>
         {isSelected && (
           <Ionicons name="checkmark-circle" size={20} color="#00cc99" />
         )}
       </TouchableOpacity>
     );
+  };
+
+  const renderEmptyState = () => {
+    if (loading) {
+      return (
+        <View style={styles.emptyStateContainer}>
+          <ActivityIndicator size="large" color="#00cc99" />
+          <Text style={styles.emptyStateText}>Loading friends...</Text>
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={styles.emptyStateContainer}>
+          <Ionicons name="alert-circle-outline" size={40} color="#ff6b6b" />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={fetchFriends}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (friends.length === 0) {
+      return (
+        <View style={styles.emptyStateContainer}>
+          <Ionicons name="people-outline" size={40} color="#aaa" />
+          <Text style={styles.emptyStateText}>You don't have any friends yet</Text>
+        </View>
+      );
+    }
+
+    if (searchQuery && filteredFriends.length === 0) {
+      return (
+        <View style={styles.emptyStateContainer}>
+          <Ionicons name="search-outline" size={40} color="#aaa" />
+          <Text style={styles.emptyStateText}>No friends match your search</Text>
+        </View>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -101,10 +198,13 @@ const FriendsDropdown = ({ selectedFriends, setSelectedFriends }) => {
             data={selectedFriends}
             horizontal
             showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item._id}
             renderItem={({ item }) => (
               <View style={styles.selectedFriendChip}>
-                <Text style={styles.selectedFriendChipText}>{item.name}</Text>
+                <Text style={styles.chipAvatar}>{getInitial(item.name)}</Text>
+                <Text style={styles.selectedFriendChipText}>
+                  {item.name || `User ${item._id.slice(-5)}`}
+                </Text>
                 <TouchableOpacity
                   onPress={() => toggleFriendSelection(item)}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -123,7 +223,16 @@ const FriendsDropdown = ({ selectedFriends, setSelectedFriends }) => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        {/* Animated overlay with fade effect */}
+        <Animated.View
+          style={[
+            styles.modalOverlay,
+            { opacity: fadeAnim }
+          ]}
+        />
+
+        {/* Modal content - slides up from bottom */}
+        <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Friends</Text>
@@ -156,13 +265,12 @@ const FriendsDropdown = ({ selectedFriends, setSelectedFriends }) => {
 
             <FlatList
               data={filteredFriends}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item._id}
               renderItem={renderFriendItem}
               style={styles.friendsList}
               showsVerticalScrollIndicator={false}
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>No matching friends found</Text>
-              }
+              ListEmptyComponent={renderEmptyState}
+              contentContainerStyle={filteredFriends.length === 0 ? { flex: 1 } : null}
             />
 
             <TouchableOpacity
@@ -211,21 +319,40 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   selectedFriendChipText: {
+    marginLeft: 6,
     marginRight: 6,
     fontSize: 14,
     color: '#333',
   },
+  chipAvatar: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#00cc99',
+    color: 'white',
+    textAlign: 'center',
+    lineHeight: 20,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
   modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    maxHeight: '80%',
+    height: '70%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -257,6 +384,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   friendsList: {
+    flex: 1,
     marginBottom: 15,
   },
   friendItem: {
@@ -267,6 +395,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+  },
+  friendInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#e0f7fa',
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#00cc99',
   },
   selectedFriendItem: {
     backgroundColor: '#f0f9f6',
@@ -279,11 +425,34 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#00cc99',
   },
-  emptyText: {
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyStateText: {
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 10,
     color: '#999',
     fontSize: 16,
+  },
+  errorText: {
+    textAlign: 'center',
+    marginTop: 10,
+    color: '#ff6b6b',
+    fontSize: 16,
+  },
+  retryButton: {
+    marginTop: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#00cc99',
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   doneButton: {
     backgroundColor: '#00cc99',

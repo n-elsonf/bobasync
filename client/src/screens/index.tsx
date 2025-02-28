@@ -87,18 +87,18 @@ export default function Index() {
         <Text className="text-1xl font-bold text-center">A scheduling app for all your coffee chats.</Text>
 
         {/* Sign in with Email */}
-        {/* <TouchableOpacity onPress={handleLogin} className='top-20 bg-white shadow-md shadow-zinc-300 rounded-full w-3/4 py-4'>
+        <TouchableOpacity onPress={handleLogin} className='top-20 bg-white shadow-md shadow-zinc-300 rounded-full w-3/4 py-4'>
           <View className='flex flex-row items-center justify-center'>
             <Text>Sign In 🧋</Text>
           </View>
-        </TouchableOpacity> */}
+        </TouchableOpacity>
 
         {/* Register Button */}
-        {/* <TouchableOpacity onPress={handleRegister} className='mt-4 top-20 bg-white shadow-md shadow-zinc-300 rounded-full w-3/4 py-4'>
+        <TouchableOpacity onPress={handleRegister} className='mt-4 top-20 bg-white shadow-md shadow-zinc-300 rounded-full w-3/4 py-4'>
           <View className='flex flex-row items-center justify-center'>
             <Text>Create Account 🧋</Text>
           </View>
-        </TouchableOpacity> */}
+        </TouchableOpacity>
 
         {/* Google Sign-In Button */}
         <TouchableOpacity
