@@ -7,12 +7,13 @@ export class FriendController {
    * Get all friends of the current user
    */
   static async getFriends(req: Request, res: Response) {
+    console.log("get Friends:", req.userId);
     const user = await User.findById(req.userId)
       .populate('friends', 'name email profilePicture');
 
     res.json({
       success: true,
-      data: user?.friends || []
+      friends: user?.friends || []
     });
   }
 
@@ -29,7 +30,7 @@ export class FriendController {
 
     res.json({
       success: true,
-      data: pendingRequests
+      requests: pendingRequests
     });
   }
 
