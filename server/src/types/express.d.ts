@@ -1,11 +1,18 @@
 
-import { Document } from 'mongoose';
+import { Types, Document } from 'mongoose';
 import { IUser, IUserMethods } from './user';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: Document &  IUser & IUserMethods;
-    }
+declare namespace Express {
+  // Define the User interface inside Express namespace
+  interface User extends IUser, IUserMethods {
+    _id: Types.ObjectId;
   }
+  export interface Request {
+    user?: User;
+  }
+
+  export interface Response {
+    user?: User;
+  }
+
 }
