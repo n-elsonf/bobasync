@@ -7,12 +7,13 @@ export class FriendController {
    * Get all friends of the current user
    */
   static async getFriends(req: Request, res: Response) {
-    const user = await User.findById(req.user!._id)
+    console.log("get Friends:", req.userId);
+    const user = await User.findById(req.userId)
       .populate('friends', 'name email profilePicture');
 
     res.json({
       success: true,
-      data: user?.friends || []
+      friends: user?.friends || []
     });
   }
 
@@ -20,7 +21,7 @@ export class FriendController {
    * Get all pending friend requests for the current user
    */
   static async getPendingRequests(req: Request, res: Response) {
-    const user = await User.findById(req.user!._id)
+    const user = await User.findById(req.userId)
       .populate('friendRequests.from', 'name email profilePicture');
 
     const pendingRequests = user?.friendRequests.filter(
@@ -29,7 +30,7 @@ export class FriendController {
 
     res.json({
       success: true,
-      data: pendingRequests
+      requests: pendingRequests
     });
   }
 
@@ -43,7 +44,7 @@ export class FriendController {
     // Add friend request to target user
     targetUser!.friendRequests.push({
       _id: new Types.ObjectId(),
-      from: req.user!._id,
+      from: req.userId!,
       status: 'pending',
       createdAt: new Date()
     });
@@ -61,7 +62,7 @@ export class FriendController {
    */
   static async acceptRequest(req: Request, res: Response) {
     const { requestId } = req.params;
-    const user = await User.findById(req.user!._id);
+    const user = await User.findById(req.userId);
     const request = user!.friendRequestsWithRequestId.get(requestId);
 
     // Update request status
@@ -88,7 +89,7 @@ export class FriendController {
    */
   static async rejectRequest(req: Request, res: Response) {
     const { requestId } = req.params;
-    const user = await User.findById(req.user!._id);
+    const user = await User.findById(req.userId);
     const request = user!.friendRequestsWithRequestId.get(requestId);
 
     request!.status = 'rejected';
@@ -108,11 +109,11 @@ export class FriendController {
 
     // Remove from both users' friend lists
     await Promise.all([
-      User.findByIdAndUpdate(req.user!._id, {
+      User.findByIdAndUpdate(req.userId, {
         $pull: { friends: friendId }
       }),
       User.findByIdAndUpdate(friendId, {
-        $pull: { friends: req.user!._id }
+        $pull: { friends: req.userId }
       })
     ]);
 
